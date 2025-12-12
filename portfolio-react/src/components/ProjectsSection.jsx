@@ -35,9 +35,17 @@ function ProjectCard({ project }) {
 
   return (
     <article className="project-card group flex flex-col bg-surface-dark rounded-3xl overflow-hidden border border-white/5 hover:border-primary/50 hover:shadow-[0_0_30px_rgba(43,238,121,0.1)]">
-      <div className={`h-48 w-full bg-gradient-to-br ${project.gradient} relative flex items-center justify-center`}>
+      <div className={`h-48 w-full bg-gradient-to-br ${project.gradient} relative flex items-center justify-center overflow-hidden`}>
+        {project.imageUrl ? (
+          <img 
+            src={project.imageUrl} 
+            alt={project.title} 
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <span className="material-symbols-outlined text-6xl text-primary/60 group-hover:text-primary transition-colors">{project.icon}</span>
+        )}
         <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all"></div>
-        <span className="material-symbols-outlined text-6xl text-primary/60 group-hover:text-primary transition-colors">{project.icon}</span>
         <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/10">
           {project.year}
         </div>
