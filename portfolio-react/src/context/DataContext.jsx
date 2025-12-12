@@ -15,14 +15,15 @@ export function DataProvider({ children }) {
     fetchData()
   }, [])
 
-  // Check admin access
+  // Check admin access using environment variable
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const adminKey = params.get('admin')
-    if (adminKey && adminKey === data.adminKey) {
+    const envKey = import.meta.env.VITE_ADMIN_KEY
+    if (adminKey && envKey && adminKey === envKey) {
       setIsAdmin(true)
     }
-  }, [data.adminKey])
+  }, [])
 
   const fetchData = async () => {
     try {

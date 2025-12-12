@@ -160,6 +160,8 @@ function StatsTab({ formData, updateField }) {
 }
 
 function ExperienceTab({ formData, setFormData }) {
+  const icons = ['work', 'terminal', 'business', 'lightbulb', 'school', 'code', 'rocket_launch', 'engineering']
+
   const addExperience = () => {
     setFormData(prev => ({
       ...prev,
@@ -199,16 +201,42 @@ function ExperienceTab({ formData, setFormData }) {
       {formData.experience.map((exp, i) => (
         <div key={exp.id} className="bg-white/5 rounded-lg p-4 space-y-3">
           <div className="flex justify-between items-center">
-            <span className="text-white font-bold">{exp.title.es}</span>
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary">{exp.icon}</span>
+              <span className="text-white font-bold">{exp.title.es}</span>
+              {exp.isCurrent && <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">Actual</span>}
+            </div>
             <button onClick={() => deleteExp(i)} className="text-red-400 hover:text-red-300">
               <span className="material-symbols-outlined">delete</span>
             </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <Input label="Título (ES)" value={exp.title.es} onChange={(v) => updateExp(i, 'title.es', v)} />
             <Input label="Title (EN)" value={exp.title.en} onChange={(v) => updateExp(i, 'title.en', v)} />
             <Input label="Fecha" value={exp.date} onChange={(v) => updateExp(i, 'date', v)} />
-            <Input label="Icono" value={exp.icon} onChange={(v) => updateExp(i, 'icon', v)} />
+            <div>
+              <label className="block text-gray-400 text-xs mb-1">Icono</label>
+              <select
+                value={exp.icon}
+                onChange={(e) => updateExp(i, 'icon', e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+              >
+                {icons.map(ic => <option key={ic} value={ic}>{ic}</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={exp.isCurrent}
+                onChange={(e) => updateExp(i, 'isCurrent', e.target.checked)}
+                className="w-4 h-4 accent-primary"
+              />
+              <label className="text-gray-400 text-sm">¿Es trabajo actual?</label>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Textarea label="Descripción (ES)" value={exp.description.es} onChange={(v) => updateExp(i, 'description.es', v)} />
+            <Textarea label="Description (EN)" value={exp.description.en} onChange={(v) => updateExp(i, 'description.en', v)} />
           </div>
         </div>
       ))}
@@ -220,6 +248,16 @@ function ExperienceTab({ formData, setFormData }) {
 }
 
 function ProjectsTab({ formData, setFormData }) {
+  const categoryColors = ['primary', 'blue', 'purple', 'orange', 'red', 'cyan']
+  const gradients = [
+    'from-purple-900/50 to-blue-900/50',
+    'from-orange-900/50 to-red-900/50',
+    'from-cyan-900/50 to-teal-900/50',
+    'from-indigo-900/50 to-violet-900/50',
+    'from-green-900/50 to-emerald-900/50',
+    'from-pink-900/50 to-rose-900/50'
+  ]
+
   const addProject = () => {
     setFormData(prev => ({
       ...prev,
@@ -234,6 +272,7 @@ function ProjectsTab({ formData, setFormData }) {
         demoUrl: '',
         repoUrl: '',
         downloadUrl: '',
+        imageUrl: '',
         icon: 'code',
         gradient: 'from-purple-900/50 to-blue-900/50'
       }]
@@ -270,14 +309,42 @@ function ProjectsTab({ formData, setFormData }) {
               <span className="material-symbols-outlined">delete</span>
             </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <Input label="Título" value={proj.title} onChange={(v) => updateProj(i, 'title', v)} />
             <Input label="Categoría" value={proj.category} onChange={(v) => updateProj(i, 'category', v)} />
             <Input label="Año" value={proj.year} onChange={(v) => updateProj(i, 'year', v)} />
-            <Input label="Icono" value={proj.icon} onChange={(v) => updateProj(i, 'icon', v)} />
+            <Input label="Icono (Material Symbol)" value={proj.icon} onChange={(v) => updateProj(i, 'icon', v)} />
+            <div>
+              <label className="block text-gray-400 text-xs mb-1">Color Categoría</label>
+              <select
+                value={proj.categoryColor}
+                onChange={(e) => updateProj(i, 'categoryColor', e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+              >
+                {categoryColors.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-gray-400 text-xs mb-1">Gradiente</label>
+              <select
+                value={proj.gradient}
+                onChange={(e) => updateProj(i, 'gradient', e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+              >
+                {gradients.map(g => <option key={g} value={g}>{g.split(' ')[0].replace('from-', '')}</option>)}
+              </select>
+            </div>
+            <Input label="Imagen URL" value={proj.imageUrl || ''} onChange={(v) => updateProj(i, 'imageUrl', v)} />
             <Input label="Demo URL" value={proj.demoUrl} onChange={(v) => updateProj(i, 'demoUrl', v)} />
             <Input label="Repo URL" value={proj.repoUrl} onChange={(v) => updateProj(i, 'repoUrl', v)} />
-            <Input label="Tecnologías (coma)" value={proj.technologies.join(', ')} onChange={(v) => updateProj(i, 'technologies', v.split(',').map(t => t.trim()))} />
+            <Input label="Download URL" value={proj.downloadUrl} onChange={(v) => updateProj(i, 'downloadUrl', v)} />
+            <div className="md:col-span-2 lg:col-span-3">
+              <Input label="Tecnologías (separadas por coma)" value={proj.technologies.join(', ')} onChange={(v) => updateProj(i, 'technologies', v.split(',').map(t => t.trim()))} />
+            </div>
+            <div className="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Textarea label="Descripción (ES)" value={proj.description.es} onChange={(v) => updateProj(i, 'description.es', v)} />
+              <Textarea label="Description (EN)" value={proj.description.en} onChange={(v) => updateProj(i, 'description.en', v)} />
+            </div>
           </div>
         </div>
       ))}
