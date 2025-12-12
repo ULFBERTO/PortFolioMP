@@ -1,0 +1,179 @@
+{
+    "adminKey": "mario2024",
+    "theme": {
+        "primary": "#2bee79",
+        "backgroundDark": "#102217",
+        "surfaceDark": "#162e21",
+        "backgroundLight": "#f6f8f7",
+        "surfaceLight": "#ffffff"
+    },
+    "profile": {
+        "name": "Mario Alejandro Patiño Ortiz",
+        "shortName": "Mario Patiño",
+        "initials": "MA",
+        "role": {
+            "es": "Desarrollador FullStack",
+            "en": "FullStack Developer"
+        },
+        "avatarUrl": "",
+        "email": "mario.patino@example.com",
+        "github": "https://github.com/ULFBERTO",
+        "linkedin": "https://linkedin.com/in/mario-patino",
+        "cvUrl": ""
+    },
+    "hero": {
+        "greeting": {
+            "es": "Hola, soy",
+            "en": "Hello, I'm"
+        },
+        "description": {
+            "es": "Desarrollador FullStack especializado en tecnologías web modernas. Transformando ideas complejas en código elegante y eficiente desde 2022.",
+            "en": "FullStack Developer specializing in modern web technologies. Transforming complex ideas into elegant, efficient code since 2022."
+        }
+    },
+    "stats": {
+        "yearsActive": {
+            "value": "3+",
+            "label": { "es": "Años Activo", "en": "Years Active" },
+            "sublabel": { "es": "Desde 2022", "en": "Since 2022" }
+        },
+        "projects": {
+            "value": "5+",
+            "label": { "es": "Proyectos", "en": "Projects" },
+            "sublabel": { "es": "Proyectos principales", "en": "Major projects" }
+        },
+        "techStack": {
+            "value": "10+",
+            "label": { "es": "Stack Tecnológico", "en": "Tech Stack" },
+            "sublabel": { "es": "Tecnologías", "en": "Technologies" }
+        },
+        "experience": {
+            "value": "3",
+            "label": { "es": "Experiencia", "en": "Experience" },
+            "sublabel": { "es": "Freelance, Empresa, Personal", "en": "Freelance, Company, Personal" }
+        }
+    },
+    "experience": [
+        {
+            "id": "exp1",
+            "icon": "terminal",
+            "title": { "es": "Desarrollador FullStack Freelance", "en": "Freelance FullStack Developer" },
+            "date": "2023 - Present",
+            "description": {
+                "es": "Desarrollo de soluciones web personalizadas para clientes internacionales usando Angular, .NET y tecnologías modernas.",
+                "en": "Developing custom web solutions for international clients using Angular, .NET and modern technologies."
+            },
+            "isCurrent": true
+        },
+        {
+            "id": "exp2",
+            "icon": "business",
+            "title": { "es": "Desarrollador en Empresa", "en": "Company Developer" },
+            "date": "2022 - 2023",
+            "description": {
+                "es": "Colaboración en desarrollo de microservicios backend y componentes UI frontend.",
+                "en": "Collaboration on backend microservices development and frontend UI components."
+            },
+            "isCurrent": false
+        },
+        {
+            "id": "exp3",
+            "icon": "lightbulb",
+            "title": { "es": "Proyectos Personales", "en": "Personal Projects" },
+            "date": "2022 - Present",
+            "description": {
+                "es": "Desarrollo continuo de proyectos innovadores para aprendizaje y portafolio.",
+                "en": "Continuous development of innovative projects for learning and portfolio."
+            },
+            "isCurrent": true
+        }
+    ],
+    "technologies": [
+        "Angular", ".NET", "Rust", "C++", "Python", "TypeScript", "OpenGL", "Three.js", "Qiskit", "Flask"
+    ],
+    "projects": [
+        {
+            "id": "atomsim",
+            "title": "AtomSim",
+            "category": "Educational",
+            "categoryColor": "primary",
+            "year": "2024",
+            "description": {
+                "es": "Simulador interactivo de química molecular con visualización 3D de átomos. Incluye motor de física realista, tabla periódica integrada y formación de moléculas automática.",
+                "en": "Interactive molecular chemistry simulator with 3D atom visualization. Includes realistic physics engine, integrated periodic table and automatic molecule formation."
+            },
+            "technologies": ["Angular 17", "Three.js", "Cannon-es"],
+            "demoUrl": "https://atom-ai10vs8xq-ulfbertos-projects.vercel.app/",
+            "repoUrl": "https://github.com/ULFBERTO/AtomSim",
+            "downloadUrl": "",
+            "icon": "science",
+            "gradient": "from-purple-900/50 to-blue-900/50"
+        },
+        {
+            "id": "oxide-browser",
+            "title": "Oxide Browser",
+            "category": "Full Stack",
+            "categoryColor": "blue",
+            "year": "2024",
+            "description": {
+                "es": "Motor de búsqueda completo con backend .NET (algoritmo BM25), frontend Angular 19, e instalador nativo en Rust. Incluye modo IA y búsqueda multi-categoría.",
+                "en": "Complete search engine with .NET backend (BM25 algorithm), Angular 19 frontend, and native Rust installer. Includes AI mode and multi-category search."
+            },
+            "technologies": [".NET 8", "Angular 19", "Rust"],
+            "demoUrl": "https://oxide-browser.vercel.app",
+            "repoUrl": "https://github.com/ULFBERTO/OxideBrowser",
+            "downloadUrl": "https://github.com/ULFBERTO/Oxide/releases",
+            "icon": "public",
+            "gradient": "from-orange-900/50 to-red-900/50"
+        },
+        {
+            "id": "oxide-engine",
+            "title": "OxideEngine",
+            "category": "Graphics Engine",
+            "categoryColor": "purple",
+            "year": "2024",
+            "description": {
+                "es": "Motor gráfico 3D desarrollado desde cero en C++17 con OpenGL 3.3. Incluye editor visual con sistema de gizmos, raycast para selección y gestión de proyectos.",
+                "en": "3D graphics engine built from scratch in C++17 with OpenGL 3.3. Includes visual editor with gizmo system, raycast for selection and project management."
+            },
+            "technologies": ["C++17", "OpenGL 3.3", "Dear ImGui"],
+            "demoUrl": "",
+            "repoUrl": "https://github.com/ULFBERTO/Oxide",
+            "downloadUrl": "https://github.com/ULFBERTO/Oxide/releases",
+            "icon": "3d_rotation",
+            "gradient": "from-cyan-900/50 to-teal-900/50"
+        },
+        {
+            "id": "quantumleap",
+            "title": "QuantumLeap",
+            "category": "Quantum Computing",
+            "categoryColor": "primary",
+            "year": "2024",
+            "description": {
+                "es": "Plataforma educativa de computación cuántica con esfera de Bloch 3D interactiva, diseñador de circuitos y backend Python con Qiskit para ejecución real.",
+                "en": "Quantum computing educational platform with interactive 3D Bloch sphere, circuit designer and Python backend with Qiskit for real execution."
+            },
+            "technologies": ["Angular 19", "Python", "Qiskit"],
+            "demoUrl": "https://basic-quantum-akgorithms.vercel.app/",
+            "repoUrl": "https://github.com/ULFBERTO/Basic-Quantum-Akgorithms",
+            "downloadUrl": "",
+            "icon": "memory",
+            "gradient": "from-indigo-900/50 to-violet-900/50"
+        }
+    ],
+    "contact": {
+        "title": { "es": "¿Trabajamos juntos?", "en": "Let's work together?" },
+        "description": {
+            "es": "Estoy disponible para proyectos freelance, oportunidades de trabajo y colaboraciones. ¡No dudes en contactarme!",
+            "en": "I'm available for freelance projects, job opportunities and collaborations. Don't hesitate to contact me!"
+        }
+    },
+    "sidebar": {
+        "availability": { "es": "Disponibilidad", "en": "Availability" },
+        "openToWork": { "es": "Disponible para trabajar", "en": "Open to work" },
+        "downloadCV": { "es": "Descargar CV", "en": "Download CV" }
+    },
+    "footer": {
+        "builtWith": { "es": "Construido con código y café.", "en": "Built with code & coffee." }
+    }
+}

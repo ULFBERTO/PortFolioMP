@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Dashboard Portafolio - Mario Alejandro Patiño Ortiz</title>
+    <meta name="description"
+        content="Portfolio de Mario Alejandro Patiño Ortiz - Desarrollador FullStack especializado en Angular, .NET, Rust y tecnologías modernas.">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2bee79",
+                        "background-light": "#f6f8f7",
+                        "background-dark": "#102217",
+                        "surface-dark": "#162e21",
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Spline Sans", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: "Spline Sans", sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #102217;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #234832;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2bee79;
+        }
+
+        .project-card {
+            transition: all 0.3s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-4px);
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .float-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(43, 238, 121, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(43, 238, 121, 0.5);
+            }
+        }
+
+        .glow-effect:hover {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .admin-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            color: white;
+            width: 100%;
+        }
+
+        .admin-input:focus {
+            outline: none;
+            border-color: #2bee79;
+        }
+
+        .admin-label {
+            display: block;
+            color: #9ca3af;
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .admin-section {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white overflow-hidden h-screen flex">
+
+    <!-- Side Navigation -->
+    <aside
+        class="w-80 h-full bg-surface-dark/50 border-r border-white/5 flex flex-col justify-between p-6 shrink-0 hidden lg:flex overflow-y-auto">
+        <div class="flex flex-col gap-8">
+            <!-- User Profile -->
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="bg-gradient-to-br from-primary to-emerald-600 rounded-full size-12 ring-2 ring-primary/30 flex items-center justify-center text-background-dark font-bold text-lg profile-initials">
+                        MA
+                    </div>
+                    <div class="flex flex-col">
+                        <h1 class="text-white text-base font-bold leading-normal profile-name">Mario Patiño</h1>
+                        <p class="text-primary/80 text-xs font-medium uppercase tracking-wider profile-role">FullStack
+                            Dev</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="flex flex-col gap-2">
+                <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-full bg-primary/10 text-primary transition-colors"
+                    href="#dashboard">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <p class="text-sm font-bold leading-normal" data-i18n="nav.dashboard">Dashboard</p>
+                </a>
+                <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-full text-gray-400 hover:bg-white/5 hover:text-white transition-colors"
+                    href="#projects">
+                    <span class="material-symbols-outlined">folder_open</span>
+                    <p class="text-sm font-medium leading-normal" data-i18n="nav.projects">Proyectos</p>
+                </a>
+                <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-full text-gray-400 hover:bg-white/5 hover:text-white transition-colors"
+                    href="#experience">
+                    <span class="material-symbols-outlined">history</span>
+                    <p class="text-sm font-medium leading-normal" data-i18n="nav.experience">Experiencia</p>
+                </a>
+                <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-full text-gray-400 hover:bg-white/5 hover:text-white transition-colors"
+                    href="#contact">
+                    <span class="material-symbols-outlined">mail</span>
+                    <p class="text-sm font-medium leading-normal" data-i18n="nav.contact">Contacto</p>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="flex flex-col gap-4">
+            <!-- Language Toggle -->
+            <div class="flex items-center justify-between bg-white/5 rounded-full p-1">
+                <button id="lang-es" onclick="setLanguage('es')"
+                    class="lang-btn flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all bg-primary text-background-dark">
+                    ES
+                </button>
+                <button id="lang-en" onclick="setLanguage('en')"
+                    class="lang-btn flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all text-gray-400 hover:text-white">
+                    EN
+                </button>
+            </div>
+
+            <!-- Availability Status -->
+            <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+                <p class="text-gray-400 text-xs mb-2" data-i18n="sidebar.availability">Disponibilidad</p>
+                <div class="flex items-center gap-2">
+                    <span class="relative flex h-3 w-3">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                    </span>
+                    <span class="text-white text-sm font-medium" data-i18n="sidebar.openToWork">Disponible para
+                        trabajar</span>
+                </div>
+            </div>
+
+            <!-- Download CV Button -->
+            <a id="cv-download-btn" href="#"
+                class="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full h-12 px-4 bg-primary text-background-dark text-sm font-bold leading-normal tracking-wide hover:bg-[#1fd665] transition-colors glow-effect">
+                <span class="material-symbols-outlined text-[20px]">download</span>
+                <span class="truncate" data-i18n="sidebar.downloadCV">Descargar CV</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 h-full overflow-y-auto relative">
+        <!-- Mobile Header -->
+        <header
+            class="lg:hidden flex items-center justify-between p-4 border-b border-white/10 bg-background-dark sticky top-0 z-50">
+            <div class="flex items-center gap-3">
+                <div
+                    class="bg-gradient-to-br from-primary to-emerald-600 rounded-full size-10 flex items-center justify-center text-background-dark font-bold profile-initials">
+                    MA
+                </div>
+                <span class="text-white font-bold profile-name">Mario P.</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleLanguage()" class="text-primary p-2 bg-white/5 rounded-full">
+                    <span id="mobile-lang-indicator" class="text-sm font-bold">ES</span>
+                </button>
+                <button id="mobile-menu-btn" class="text-white p-2">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="lg:hidden hidden fixed inset-0 bg-background-dark z-40 p-6 pt-20">
+            <nav class="flex flex-col gap-4">
+                <a class="flex items-center gap-3 px-4 py-3 rounded-full bg-primary/10 text-primary" href="#dashboard"
+                    onclick="closeMobileMenu()">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span data-i18n="nav.dashboard">Dashboard</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-full text-gray-400" href="#projects"
+                    onclick="closeMobileMenu()">
+                    <span class="material-symbols-outlined">folder_open</span>
+                    <span data-i18n="nav.projects">Proyectos</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-full text-gray-400" href="#experience"
+                    onclick="closeMobileMenu()">
+                    <span class="material-symbols-outlined">history</span>
+                    <span data-i18n="nav.experience">Experiencia</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-full text-gray-400" href="#contact"
+                    onclick="closeMobileMenu()">
+                    <span class="material-symbols-outlined">mail</span>
+                    <span data-i18n="nav.contact">Contacto</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="layout-container flex flex-col max-w-[1400px] mx-auto p-4 lg:p-10 gap-8">
+
+            <!-- Hero Section -->
+            <section id="dashboard"
+                class="flex flex-col gap-6 rounded-3xl bg-surface-dark p-6 md:p-10 border border-white/5 relative overflow-hidden">
+                <div
+                    class="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none float-animation">
+                </div>
+                <div
+                    class="absolute -left-10 -bottom-10 w-48 h-48 bg-primary/3 rounded-full blur-2xl pointer-events-none">
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-8 items-start md:items-center justify-between relative z-10">
+                    <div class="flex flex-col gap-4 max-w-2xl">
+                        <h2 class="text-primary font-medium tracking-wide text-sm uppercase">Portfolio Dashboard v2.0
+                        </h2>
+                        <h1 class="text-white text-3xl md:text-5xl font-bold leading-tight tracking-tight">
+                            <span data-i18n="hero.greeting">Hola, soy</span> <span
+                                class="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 hero-name">Mario
+                                Alejandro.</span>
+                        </h1>
+                        <p class="text-gray-400 text-lg leading-relaxed max-w-xl" data-i18n="hero.description">
+                            Desarrollador FullStack especializado en tecnologías web modernas.
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap gap-3" id="social-links">
+                        <a class="flex items-center gap-2 h-12 px-6 rounded-full bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all group"
+                            href="https://github.com/ULFBERTO" target="_blank" id="github-link">
+                            <span class="truncate">GitHub</span>
+                            <span
+                                class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_outward</span>
+                        </a>
+                        <a class="flex items-center gap-2 h-12 px-6 rounded-full bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all group"
+                            href="https://linkedin.com/in/mario-patino" target="_blank" id="linkedin-link">
+                            <span class="truncate">LinkedIn</span>
+                            <span
+                                class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_outward</span>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Row -->
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="stats-container">
+                <!-- Stats will be rendered dynamically -->
+            </section>
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+
+                <!-- Left Column: Experience Timeline -->
+                <section id="experience" class="xl:col-span-1 flex flex-col gap-6">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">history_edu</span>
+                        <h2 class="text-white text-xl font-bold" data-i18n="experience.title">Línea de Experiencia</h2>
+                    </div>
+
+                    <div class="bg-surface-dark rounded-3xl p-6 border border-white/5">
+                        <div class="grid grid-cols-[40px_1fr] gap-x-2" id="experience-container">
+                            <!-- Experience timeline will be rendered dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Core Technologies -->
+                    <div
+                        class="bg-gradient-to-br from-surface-dark to-primary/10 rounded-3xl p-6 border border-white/5">
+                        <h3 class="text-white font-bold mb-4" data-i18n="tech.title">Tecnologías Principales</h3>
+                        <div class="flex flex-wrap gap-2" id="technologies-container">
+                            <!-- Technologies will be rendered dynamically -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Column: Projects -->
+                <section id="projects" class="xl:col-span-2 flex flex-col gap-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">view_kanban</span>
+                            <h2 class="text-white text-xl font-bold" data-i18n="projects.title">Proyectos Destacados
+                            </h2>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="projects-container">
+                        <!-- Projects will be rendered dynamically -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Contact Section -->
+            <section id="contact"
+                class="flex flex-col gap-6 rounded-3xl bg-surface-dark p-6 md:p-10 border border-white/5 relative overflow-hidden">
+                <div
+                    class="absolute -right-10 -bottom-10 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none">
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-8 items-start md:items-center justify-between relative z-10">
+                    <div class="flex flex-col gap-4 max-w-xl">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">handshake</span>
+                            <h2 class="text-white text-xl font-bold" data-i18n="contact.title">¿Trabajamos juntos?</h2>
+                        </div>
+                        <p class="text-gray-400 text-base leading-relaxed" data-i18n="contact.desc">
+                            Estoy disponible para proyectos freelance, oportunidades de trabajo y colaboraciones.
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap gap-4" id="contact-links">
+                        <a href="mailto:mario.patino@example.com" id="email-btn"
+                            class="flex items-center gap-2 h-12 px-6 rounded-full bg-primary text-background-dark font-bold text-sm hover:bg-[#1fd665] transition-all glow-effect">
+                            <span class="material-symbols-outlined text-[20px]">mail</span>
+                            <span data-i18n="contact.sendEmail">Enviar Email</span>
+                        </a>
+                        <a href="https://github.com/ULFBERTO" target="_blank" id="contact-github"
+                            class="flex items-center gap-2 h-12 px-6 rounded-full bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all">
+                            <span>GitHub</span>
+                            <span class="material-symbols-outlined text-[18px]">arrow_outward</span>
+                        </a>
+                        <a href="https://linkedin.com/in/mario-patino" target="_blank" id="contact-linkedin"
+                            class="flex items-center gap-2 h-12 px-6 rounded-full bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all">
+                            <span>LinkedIn</span>
+                            <span class="material-symbols-outlined text-[18px]">arrow_outward</span>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="flex flex-col items-center justify-center py-10 mt-4 border-t border-white/5">
+                <p class="text-gray-500 text-sm">© 2024 <span class="footer-name">Mario Alejandro Patiño Ortiz</span>.
+                    <span data-i18n="footer.builtWith">Construido con código y café.</span></p>
+                <div class="flex gap-4 mt-4" id="footer-links">
+                    <a class="text-gray-400 hover:text-primary transition-colors text-sm"
+                        href="https://github.com/ULFBERTO" target="_blank">GitHub</a>
+                    <a class="text-gray-400 hover:text-primary transition-colors text-sm"
+                        href="https://linkedin.com/in/mario-patino" target="_blank">LinkedIn</a>
+                </div>
+            </footer>
+        </div>
+    </main>
+
+    <!-- ============ ADMIN PANEL ============ -->
+    <div id="admin-panel" class="hidden fixed inset-0 bg-background-dark z-[100] overflow-y-auto">
+        <div class="max-w-6xl mx-auto p-6">
+            <!-- Admin Header -->
+            <div
+                class="flex items-center justify-between mb-8 sticky top-0 bg-background-dark py-4 z-10 border-b border-white/10">
+                <div class="flex items-center gap-4">
+                    <span class="material-symbols-outlined text-primary text-3xl">admin_panel_settings</span>
+                    <div>
+                        <h1 class="text-white text-2xl font-bold">Panel de Administración</h1>
+                        <p class="text-gray-400 text-sm">Edita todo el contenido de tu portafolio</p>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="downloadData()"
+                        class="flex items-center gap-2 px-4 py-2 bg-primary text-background-dark rounded-lg font-bold text-sm hover:bg-[#1fd665] transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">download</span>
+                        Guardar JSON
+                    </button>
+                    <button onclick="hideAdminPanel()"
+                        class="flex items-center gap-2 px-4 py-2 bg-white/5 text-white rounded-lg font-bold text-sm hover:bg-white/10 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">close</span>
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Admin Tabs -->
+            <div class="flex gap-2 mb-6 flex-wrap">
+                <button
+                    class="admin-tab-btn px-4 py-2 rounded-lg font-medium text-sm transition-colors bg-primary text-background-dark"
+                    data-tab="profile" onclick="switchAdminTab('profile')">
+                    <span class="material-symbols-outlined text-[16px] align-middle mr-1">person</span> Perfil
+                </button>
+                <button
+                    class="admin-tab-btn px-4 py-2 rounded-lg font-medium text-sm transition-colors text-gray-400 hover:bg-white/10"
+                    data-tab="hero" onclick="switchAdminTab('hero')">
+                    <span class="material-symbols-outlined text-[16px] align-middle mr-1">home</span> Hero
+                </button>
+                <button
+                    class="admin-tab-btn px-4 py-2 rounded-lg font-medium text-sm transition-colors text-gray-400 hover:bg-white/10"
+                    data-tab="stats" onclick="switchAdminTab('stats')">
+                    <span class="material-symbols-outlined text-[16px] align-middle mr-1">analytics</span> Stats
+                </button>
+                <button
+                    class="admin-tab-btn px-4 py-2 rounded-lg font-medium text-sm transition-colors text-gray-400 hover:bg-white/10"
+                    data-tab="experience" onclick="switchAdminTab('experience')">
+                    <span class="material-symbols-outlined text-[16px] align-middle mr-1">work</span> Experiencia
+                </button>
+                <button
+                    class="admin-tab-btn px-4 py-2 rounded-lg font-medium text-sm transition-colors text-gray-400 hover:bg-white/10"
+                    data-tab="projects" onclick="switchAdminTab('projects')">
+                    <span class="material-symbols-outlined text-[16px] align-middle mr-1">folder</span> Proyectos
+                </button>
+                <button
+                    class="admin-tab-btn px-4 py-2 rounded-lg font-medium text-sm transition-colors text-gray-400 hover:bg-white/10"
+                    data-tab="theme" onclick="switchAdminTab('theme')">
+                    <span class="material-symbols-outlined text-[16px] align-middle mr-1">palette</span> Tema
+                </button>
+                <button
+                    class="admin-tab-btn px-4 py-2 rounded-lg font-medium text-sm transition-colors text-gray-400 hover:bg-white/10"
+                    data-tab="settings" onclick="switchAdminTab('settings')">
+                    <span class="material-symbols-outlined text-[16px] align-middle mr-1">settings</span> Config
+                </button>
+            </div>
+
+            <!-- Tab Contents -->
+
+            <!-- Profile Tab -->
+            <div id="admin-tab-profile" class="admin-tab-content">
+                <div class="admin-section">
+                    <h3 class="text-white font-bold mb-4">Información Personal</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="admin-label">Nombre Completo</label>
+                            <input type="text" id="admin-name" class="admin-input"
+                                placeholder="Mario Alejandro Patiño Ortiz">
+                        </div>
+                        <div>
+                            <label class="admin-label">Nombre Corto</label>
+                            <input type="text" id="admin-shortname" class="admin-input" placeholder="Mario Patiño">
+                        </div>
+                        <div>
+                            <label class="admin-label">Iniciales</label>
+                            <input type="text" id="admin-initials" class="admin-input" placeholder="MA" maxlength="3">
+                        </div>
+                        <div>
+                            <label class="admin-label">Email</label>
+                            <input type="email" id="admin-email" class="admin-input" placeholder="tu@email.com">
+                        </div>
+                        <div>
+                            <label class="admin-label">Rol (Español)</label>
+                            <input type="text" id="admin-role-es" class="admin-input"
+                                placeholder="Desarrollador FullStack">
+                        </div>
+                        <div>
+                            <label class="admin-label">Rol (English)</label>
+                            <input type="text" id="admin-role-en" class="admin-input" placeholder="FullStack Developer">
+                        </div>
+                        <div>
+                            <label class="admin-label">GitHub URL</label>
+                            <input type="url" id="admin-github" class="admin-input"
+                                placeholder="https://github.com/usuario">
+                        </div>
+                        <div>
+                            <label class="admin-label">LinkedIn URL</label>
+                            <input type="url" id="admin-linkedin" class="admin-input"
+                                placeholder="https://linkedin.com/in/usuario">
+                        </div>
+                        <div>
+                            <label class="admin-label">Avatar URL (opcional)</label>
+                            <input type="url" id="admin-avatar" class="admin-input" placeholder="https://...">
+                        </div>
+                        <div>
+                            <label class="admin-label">CV URL (para descarga)</label>
+                            <input type="url" id="admin-cv" class="admin-input" placeholder="https://...">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label class="admin-label">Tecnologías (separadas por coma)</label>
+                        <input type="text" id="admin-technologies" class="admin-input"
+                            placeholder="Angular, .NET, Rust, Python...">
+                    </div>
+                    <button onclick="saveAdminChanges()"
+                        class="mt-4 px-6 py-2 bg-primary text-background-dark rounded-lg font-bold text-sm hover:bg-[#1fd665] transition-colors">
+                        Aplicar Cambios
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hero Tab -->
+            <div id="admin-tab-hero" class="admin-tab-content hidden">
+                <div class="admin-section">
+                    <h3 class="text-white font-bold mb-4">Sección Hero</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="admin-label">Saludo (Español)</label>
+                            <input type="text" id="admin-hero-greeting-es" class="admin-input" placeholder="Hola, soy">
+                        </div>
+                        <div>
+                            <label class="admin-label">Greeting (English)</label>
+                            <input type="text" id="admin-hero-greeting-en" class="admin-input" placeholder="Hello, I'm">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="admin-label">Descripción (Español)</label>
+                            <textarea id="admin-hero-desc-es" class="admin-input" rows="4"
+                                placeholder="Tu descripción en español..."></textarea>
+                        </div>
+                        <div>
+                            <label class="admin-label">Description (English)</label>
+                            <textarea id="admin-hero-desc-en" class="admin-input" rows="4"
+                                placeholder="Your description in English..."></textarea>
+                        </div>
+                    </div>
+                    <button onclick="saveAdminChanges()"
+                        class="mt-4 px-6 py-2 bg-primary text-background-dark rounded-lg font-bold text-sm hover:bg-[#1fd665] transition-colors">
+                        Aplicar Cambios
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Tab -->
+            <div id="admin-tab-stats" class="admin-tab-content hidden">
+                <div class="admin-section">
+                    <h3 class="text-white font-bold mb-4">Estadísticas</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="admin-label">Años Activo</label>
+                            <input type="text" id="admin-stat-years" class="admin-input" placeholder="3+">
+                        </div>
+                        <div>
+                            <label class="admin-label">Proyectos</label>
+                            <input type="text" id="admin-stat-projects" class="admin-input" placeholder="5+">
+                        </div>
+                        <div>
+                            <label class="admin-label">Tecnologías</label>
+                            <input type="text" id="admin-stat-tech" class="admin-input" placeholder="10+">
+                        </div>
+                        <div>
+                            <label class="admin-label">Tipos de Experiencia</label>
+                            <input type="text" id="admin-stat-exp" class="admin-input" placeholder="3">
+                        </div>
+                    </div>
+                    <button onclick="saveAdminChanges()"
+                        class="mt-4 px-6 py-2 bg-primary text-background-dark rounded-lg font-bold text-sm hover:bg-[#1fd665] transition-colors">
+                        Aplicar Cambios
+                    </button>
+                </div>
+            </div>
+
+            <!-- Experience Tab -->
+            <div id="admin-tab-experience" class="admin-tab-content hidden">
+                <div class="admin-section">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-white font-bold">Experiencias</h3>
+                        <button onclick="showExperienceForm()"
+                            class="flex items-center gap-2 px-4 py-2 bg-primary text-background-dark rounded-lg font-bold text-sm hover:bg-[#1fd665] transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">add</span>
+                            Nueva Experiencia
+                        </button>
+                    </div>
+                    <div id="admin-experience-list" class="space-y-2">
+                        <!-- Experience items will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Projects Tab -->
+            <div id="admin-tab-projects" class="admin-tab-content hidden">
+                <div class="admin-section">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-white font-bold">Proyectos</h3>
+                        <button onclick="showProjectForm()"
+                            class="flex items-center gap-2 px-4 py-2 bg-primary text-background-dark rounded-lg font-bold text-sm hover:bg-[#1fd665] transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">add</span>
+                            Nuevo Proyecto
+                        </button>
+                    </div>
+                    <div id="admin-projects-list" class="space-y-2">
+                        <!-- Project items will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Theme Tab -->
+            <div id="admin-tab-theme" class="admin-tab-content hidden">
+                <div class="admin-section">
+                    <h3 class="text-white font-bold mb-4">Colores del Tema</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="admin-label">Color Primario</label>
+                            <div class="flex gap-2">
+                                <input type="color" id="admin-color-primary"
+                                    class="w-12 h-10 rounded cursor-pointer border-0" value="#2bee79">
+                                <input type="text" id="admin-color-primary-text" class="admin-input flex-1"
+                                    value="#2bee79"
+                                    oninput="document.getElementById('admin-color-primary').value = this.value">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="admin-label">Color de Fondo</label>
+                            <div class="flex gap-2">
+                                <input type="color" id="admin-color-bg"
+                                    class="w-12 h-10 rounded cursor-pointer border-0" value="#102217">
+                                <input type="text" id="admin-color-bg-text" class="admin-input flex-1" value="#102217"
+                                    oninput="document.getElementById('admin-color-bg').value = this.value">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="admin-label">Color de Superficie</label>
+                            <div class="flex gap-2">
+                                <input type="color" id="admin-color-surface"
+                                    class="w-12 h-10 rounded cursor-pointer border-0" value="#162e21">
+                                <input type="text" id="admin-color-surface-text" class="admin-input flex-1"
+                                    value="#162e21"
+                                    oninput="document.getElementById('admin-color-surface').value = this.value">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 mt-4">
+                        <button onclick="previewTheme()"
+                            class="px-6 py-2 bg-white/10 text-white rounded-lg font-bold text-sm hover:bg-white/20 transition-colors">
+                            Vista Previa
+                        </button>
+                        <button onclick="saveAdminChanges()"
+                            class="px-6 py-2 bg-primary text-background-dark rounded-lg font-bold text-sm hover:bg-[#1fd665] transition-colors">
+                            Aplicar Cambios
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="admin-tab-settings" class="admin-tab-content hidden">
+                <div class="admin-section">
+                    <h3 class="text-white font-bold mb-4">Configuración de Acceso</h3>
+                    <div class="max-w-md">
+                        <label class="admin-label">Clave de Administración</label>
+                        <input type="text" id="admin-key" class="admin-input" placeholder="tu-clave-secreta">
+                        <p class="text-gray-500 text-xs mt-2">Esta es la clave que usas en la URL para acceder al panel:
+                            ?admin=TU_CLAVE</p>
+                    </div>
+                    <button onclick="saveAdminChanges()"
+                        class="mt-4 px-6 py-2 bg-primary text-background-dark rounded-lg font-bold text-sm hover:bg-[#1fd665] transition-colors">
+                        Guardar Clave
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Modal -->
+    <div id="project-modal" class="hidden fixed inset-0 bg-black/80 z-[110] flex items-center justify-center p-4">
+        <div class="bg-surface-dark rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h3 id="project-modal-title" class="text-white text-xl font-bold mb-4">Nuevo Proyecto</h3>
+            <form id="project-form" class="space-y-4">
+                <input type="hidden" id="project-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="admin-label">Título del Proyecto</label>
+                        <input type="text" id="project-title" class="admin-input" required>
+                    </div>
+                    <div>
+                        <label class="admin-label">Año</label>
+                        <input type="text" id="project-year" class="admin-input" placeholder="2024">
+                    </div>
+                    <div>
+                        <label class="admin-label">Categoría</label>
+                        <input type="text" id="project-category" class="admin-input"
+                            placeholder="Full Stack, Educational...">
+                    </div>
+                    <div>
+                        <label class="admin-label">Color de Categoría</label>
+                        <select id="project-category-color" class="admin-input">
+                            <option value="primary">Verde (Primary)</option>
+                            <option value="blue">Azul</option>
+                            <option value="purple">Morado</option>
+                            <option value="orange">Naranja</option>
+                            <option value="cyan">Cian</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="admin-label">Descripción (Español)</label>
+                        <textarea id="project-desc-es" class="admin-input" rows="3"></textarea>
+                    </div>
+                    <div>
+                        <label class="admin-label">Description (English)</label>
+                        <textarea id="project-desc-en" class="admin-input" rows="3"></textarea>
+                    </div>
+                </div>
+                <div>
+                    <label class="admin-label">Tecnologías (separadas por coma)</label>
+                    <input type="text" id="project-tech" class="admin-input" placeholder="Angular, React, Node.js...">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="admin-label">Demo URL</label>
+                        <input type="url" id="project-demo" class="admin-input">
+                    </div>
+                    <div>
+                        <label class="admin-label">Repo URL</label>
+                        <input type="url" id="project-repo" class="admin-input">
+                    </div>
+                    <div>
+                        <label class="admin-label">Download URL</label>
+                        <input type="url" id="project-download" class="admin-input">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="admin-label">Icono (Material Symbols)</label>
+                        <input type="text" id="project-icon" class="admin-input" placeholder="code, science, public...">
+                    </div>
+                    <div>
+                        <label class="admin-label">Gradiente de Fondo</label>
+                        <input type="text" id="project-gradient" class="admin-input"
+                            placeholder="from-purple-900/50 to-blue-900/50">
+                    </div>
+                </div>
+                <div class="flex gap-3 justify-end">
+                    <button type="button" onclick="hideProjectModal()"
+                        class="px-4 py-2 bg-white/10 text-white rounded-lg font-bold text-sm">Cancelar</button>
+                    <button type="button" onclick="saveProject()"
+                        class="px-4 py-2 bg-primary text-background-dark rounded-lg font-bold text-sm">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Experience Modal -->
+    <div id="experience-modal" class="hidden fixed inset-0 bg-black/80 z-[110] flex items-center justify-center p-4">
+        <div class="bg-surface-dark rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h3 id="experience-modal-title" class="text-white text-xl font-bold mb-4">Nueva Experiencia</h3>
+            <form id="experience-form" class="space-y-4">
+                <input type="hidden" id="exp-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="admin-label">Título (Español)</label>
+                        <input type="text" id="exp-title-es" class="admin-input" required>
+                    </div>
+                    <div>
+                        <label class="admin-label">Title (English)</label>
+                        <input type="text" id="exp-title-en" class="admin-input" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="admin-label">Fecha</label>
+                        <input type="text" id="exp-date" class="admin-input" placeholder="2023 - Present">
+                    </div>
+                    <div>
+                        <label class="admin-label">Icono (Material Symbols)</label>
+                        <input type="text" id="exp-icon" class="admin-input"
+                            placeholder="terminal, business, school...">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="admin-label">Descripción (Español)</label>
+                        <textarea id="exp-desc-es" class="admin-input" rows="3"></textarea>
+                    </div>
+                    <div>
+                        <label class="admin-label">Description (English)</label>
+                        <textarea id="exp-desc-en" class="admin-input" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="exp-current" class="w-4 h-4 rounded">
+                    <label for="exp-current" class="text-white text-sm">Es posición actual (se muestra
+                        resaltado)</label>
+                </div>
+                <div class="flex gap-3 justify-end">
+                    <button type="button" onclick="hideExperienceModal()"
+                        class="px-4 py-2 bg-white/10 text-white rounded-lg font-bold text-sm">Cancelar</button>
+                    <button type="button" onclick="saveExperience()"
+                        class="px-4 py-2 bg-primary text-background-dark rounded-lg font-bold text-sm">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="translations.js"></script>
+    <script src="admin.js"></script>
+</body>
+
+</html>
