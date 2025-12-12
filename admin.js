@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Load portfolio data from JSON
 async function loadPortfolioData() {
     try {
+        debugger
         const response = await fetch('data.json');
         if (!response.ok) throw new Error('Fetch failed');
         portfolioData = await response.json();
