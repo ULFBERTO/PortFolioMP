@@ -1,17 +1,15 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import initialData from '../data/portfolioData.json'
 
 const DataContext = createContext()
 
 const API_URL = 'https://www.OxideBrowserBack.somee.com/api/portfolio'
 
 export function DataProvider({ children }) {
-  // Cargar inmediatamente con datos locales (sin imágenes pesadas)
-  const [data, setData] = useState(initialData)
+  const [data, setData] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
-  const [loading, setLoading] = useState(false) // No bloquear la UI
+  const [loading, setLoading] = useState(true)
 
-  // Load data from API on mount (en background)
+  // Load data from API on mount
   useEffect(() => {
     fetchData()
   }, [])
@@ -31,11 +29,12 @@ export function DataProvider({ children }) {
       const response = await fetch(API_URL)
       if (response.ok) {
         const apiData = await response.json()
-        // Actualizar datos sin bloquear - las imágenes se cargarán lazy
         setData(apiData)
       }
     } catch (error) {
-      console.warn('Could not fetch from API, using local data:', error)
+      console.error('Error fetching data:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
