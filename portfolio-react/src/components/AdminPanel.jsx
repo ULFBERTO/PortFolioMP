@@ -118,6 +118,59 @@ function Textarea({ label, value, onChange, ...props }) {
   )
 }
 
+function ImageUpload({ label, value, onChange }) {
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('La imagen debe ser menor a 2MB')
+        return
+      }
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        onChange(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const clearImage = () => onChange('')
+
+  return (
+    <div className="lg:col-span-2">
+      <label className="block text-gray-400 text-xs mb-1">{label}</label>
+      <div className="flex gap-2 items-start">
+        <div className="flex-1">
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="URL de imagen o sube una..."
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary text-sm"
+          />
+          <div className="flex gap-2 mt-2">
+            <label className="cursor-pointer px-3 py-1.5 bg-primary/20 text-primary rounded-lg text-xs font-medium hover:bg-primary/30 transition-colors">
+              <span className="material-symbols-outlined text-[14px] align-middle mr-1">upload</span>
+              Subir imagen
+              <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+            </label>
+            {value && (
+              <button onClick={clearImage} className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-xs font-medium hover:bg-red-500/30">
+                Quitar
+              </button>
+            )}
+          </div>
+        </div>
+        {value && (
+          <div className="w-20 h-20 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+            <img src={value} alt="Preview" className="w-full h-full object-cover" />
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function ProfileTab({ formData, updateField }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -334,7 +387,11 @@ function ProjectsTab({ formData, setFormData }) {
                 {gradients.map(g => <option key={g} value={g}>{g.split(' ')[0].replace('from-', '')}</option>)}
               </select>
             </div>
-            <Input label="Imagen URL" value={proj.imageUrl || ''} onChange={(v) => updateProj(i, 'imageUrl', v)} />
+            <ImageUpload 
+              label="Imagen del Proyecto" 
+              value={proj.imageUrl || ''} 
+              onChange={(v) => updateProj(i, 'imageUrl', v)} 
+            />
             <Input label="Demo URL" value={proj.demoUrl} onChange={(v) => updateProj(i, 'demoUrl', v)} />
             <Input label="Repo URL" value={proj.repoUrl} onChange={(v) => updateProj(i, 'repoUrl', v)} />
             <Input label="Download URL" value={proj.downloadUrl} onChange={(v) => updateProj(i, 'downloadUrl', v)} />
