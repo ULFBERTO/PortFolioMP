@@ -11,18 +11,7 @@ import Footer from './components/Footer'
 import AdminPanel from './components/AdminPanel'
 
 function Portfolio() {
-  const { data, isAdmin, setIsAdmin, loading } = useData()
-
-  if (loading) {
-    return (
-      <div className="bg-background-dark text-white h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-400">Cargando...</p>
-        </div>
-      </div>
-    )
-  }
+  const { data, isAdmin, setIsAdmin } = useData()
 
   return (
     <>
