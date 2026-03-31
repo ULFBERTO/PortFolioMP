@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-primary: #2bee79;
+  --color-background-dark: #102217;
+  --color-surface-dark: #162e21;
+}
+
 body {
   font-family: "Spline Sans", sans-serif;
 }
@@ -12,16 +18,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #102217;
+  background: var(--color-background-dark);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #234832;
+  background: color-mix(in srgb, var(--color-primary) 30%, var(--color-background-dark));
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2bee79;
+  background: var(--color-primary);
 }
 
 .project-card {

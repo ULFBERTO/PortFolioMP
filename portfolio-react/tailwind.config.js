@@ -5,10 +5,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#2bee79",
+        primary: "var(--color-primary)",
         "background-light": "#f6f8f7",
-        "background-dark": "#102217",
-        "surface-dark": "#162e21",
+        "background-dark": "var(--color-background-dark)",
+        "surface-dark": "var(--color-surface-dark)",
         "surface-light": "#ffffff",
       },
       fontFamily: {

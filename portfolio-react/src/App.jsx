@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { LanguageProvider } from './context/LanguageContext'
 import { DataProvider, useData } from './context/DataContext'
 import Sidebar from './components/Sidebar'
@@ -12,6 +13,16 @@ import AdminPanel from './components/AdminPanel'
 
 function Portfolio() {
   const { data, isAdmin, setIsAdmin, loading } = useData()
+
+  // Apply theme colors dynamically
+  useEffect(() => {
+    if (data?.theme) {
+      const root = document.documentElement
+      root.style.setProperty('--color-primary', data.theme.primary)
+      root.style.setProperty('--color-background-dark', data.theme.backgroundDark)
+      root.style.setProperty('--color-surface-dark', data.theme.surfaceDark)
+    }
+  }, [data?.theme])
 
   if (loading || !data) {
     return (
