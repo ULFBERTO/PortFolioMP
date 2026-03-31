@@ -249,19 +249,60 @@ function ExperienceTab({ formData, setFormData }) {
     }))
   }
 
+  const moveExpUp = (index) => {
+    if (index === 0) return
+    setFormData(prev => {
+      const newExp = [...prev.experience]
+      const temp = newExp[index]
+      newExp[index] = newExp[index - 1]
+      newExp[index - 1] = temp
+      return { ...prev, experience: newExp }
+    })
+  }
+
+  const moveExpDown = (index) => {
+    if (index === formData.experience.length - 1) return
+    setFormData(prev => {
+      const newExp = [...prev.experience]
+      const temp = newExp[index]
+      newExp[index] = newExp[index + 1]
+      newExp[index + 1] = temp
+      return { ...prev, experience: newExp }
+    })
+  }
+
   return (
     <div className="space-y-4">
       {formData.experience.map((exp, i) => (
         <div key={exp.id} className="bg-white/5 rounded-lg p-4 space-y-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
+              <span className="text-gray-500 font-mono text-sm">#{i + 1}</span>
               <span className="material-symbols-outlined text-primary">{exp.icon}</span>
               <span className="text-white font-bold">{exp.title.es}</span>
               {exp.isCurrent && <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">Actual</span>}
             </div>
-            <button onClick={() => deleteExp(i)} className="text-red-400 hover:text-red-300">
-              <span className="material-symbols-outlined">delete</span>
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => moveExpUp(i)} 
+                disabled={i === 0}
+                className={`p-2 rounded-lg transition-colors ${i === 0 ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-primary hover:bg-white/10'}`}
+                title="Mover arriba"
+              >
+                <span className="material-symbols-outlined text-[18px]">arrow_upward</span>
+              </button>
+              <button 
+                onClick={() => moveExpDown(i)} 
+                disabled={i === formData.experience.length - 1}
+                className={`p-2 rounded-lg transition-colors ${i === formData.experience.length - 1 ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-primary hover:bg-white/10'}`}
+                title="Mover abajo"
+              >
+                <span className="material-symbols-outlined text-[18px]">arrow_downward</span>
+              </button>
+              <button onClick={() => deleteExp(i)} className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors" title="Eliminar">
+                <span className="material-symbols-outlined text-[18px]">delete</span>
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <Input label="Título (ES)" value={exp.title.es} onChange={(v) => updateExp(i, 'title.es', v)} />
@@ -352,15 +393,58 @@ function ProjectsTab({ formData, setFormData }) {
     }))
   }
 
+  const moveProjectUp = (index) => {
+    if (index === 0) return
+    setFormData(prev => {
+      const newProjects = [...prev.projects]
+      const temp = newProjects[index]
+      newProjects[index] = newProjects[index - 1]
+      newProjects[index - 1] = temp
+      return { ...prev, projects: newProjects }
+    })
+  }
+
+  const moveProjectDown = (index) => {
+    if (index === formData.projects.length - 1) return
+    setFormData(prev => {
+      const newProjects = [...prev.projects]
+      const temp = newProjects[index]
+      newProjects[index] = newProjects[index + 1]
+      newProjects[index + 1] = temp
+      return { ...prev, projects: newProjects }
+    })
+  }
+
   return (
     <div className="space-y-4">
       {formData.projects.map((proj, i) => (
         <div key={proj.id} className="bg-white/5 rounded-lg p-4 space-y-3">
           <div className="flex justify-between items-center">
-            <span className="text-white font-bold">{proj.title}</span>
-            <button onClick={() => deleteProj(i)} className="text-red-400 hover:text-red-300">
-              <span className="material-symbols-outlined">delete</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <span className="text-gray-500 font-mono text-sm">#{i + 1}</span>
+              <span className="text-white font-bold">{proj.title}</span>
+            </div>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => moveProjectUp(i)} 
+                disabled={i === 0}
+                className={`p-2 rounded-lg transition-colors ${i === 0 ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-primary hover:bg-white/10'}`}
+                title="Mover arriba"
+              >
+                <span className="material-symbols-outlined text-[18px]">arrow_upward</span>
+              </button>
+              <button 
+                onClick={() => moveProjectDown(i)} 
+                disabled={i === formData.projects.length - 1}
+                className={`p-2 rounded-lg transition-colors ${i === formData.projects.length - 1 ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-primary hover:bg-white/10'}`}
+                title="Mover abajo"
+              >
+                <span className="material-symbols-outlined text-[18px]">arrow_downward</span>
+              </button>
+              <button onClick={() => deleteProj(i)} className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors" title="Eliminar">
+                <span className="material-symbols-outlined text-[18px]">delete</span>
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <Input label="Título" value={proj.title} onChange={(v) => updateProj(i, 'title', v)} />
