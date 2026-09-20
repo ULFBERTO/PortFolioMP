@@ -38,27 +38,27 @@ func NewApp() (*App, error) {
 		}
 
 		switch {
-		case path == "/api/health" || path == "/health":
+		case strings.Contains(path, "health"):
 			if r.Method == http.MethodGet {
 				h.HealthCheck(w, r)
 			} else {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}
 
-		case path == "/api/portfolio" || path == "/portfolio":
+		case strings.Contains(path, "auth") || strings.Contains(path, "verify"):
+			if r.Method == http.MethodPost || r.Method == http.MethodGet {
+				h.VerifyAuth(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+
+		case strings.Contains(path, "portfolio"):
 			switch r.Method {
 			case http.MethodGet:
 				h.GetPortfolio(w, r)
 			case http.MethodPost, http.MethodPut:
 				h.UpdatePortfolio(w, r)
 			default:
-				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			}
-
-		case path == "/api/auth/verify" || path == "/auth/verify":
-			if r.Method == http.MethodPost || r.Method == http.MethodGet {
-				h.VerifyAuth(w, r)
-			} else {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}
 
