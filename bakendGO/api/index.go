@@ -31,8 +31,13 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Restore original request path if rewritten by Vercel
-	if matchedPath := r.Header.Get("X-Matched-Path"); matchedPath != "" {
+	// Restore original request path from query parameter (passed by vercel.json rewrite)
+	if qPath := r.URL.Query().Get("path"); qPath != "" {
+		if !strings.HasPrefix(qPath, "/") {
+			qPath = "/" + qPath
+		}
+		r.URL.Path = qPath
+	} else if matchedPath := r.Header.Get("X-Matched-Path"); matchedPath != "" {
 		r.URL.Path = matchedPath
 	} else if origPath := r.Header.Get("X-Forwarded-Uri"); origPath != "" {
 		r.URL.Path = strings.Split(origPath, "?")[0]
