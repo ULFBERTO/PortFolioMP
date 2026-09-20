@@ -32,7 +32,7 @@ func Load() *Config {
 
 	adminKey := os.Getenv("ADMIN_KEY")
 	if adminKey == "" {
-		adminKey = "mario2024"
+		adminKey = "mario2026"
 	}
 
 	jwtSecret := os.Getenv("JWT_SECRET")

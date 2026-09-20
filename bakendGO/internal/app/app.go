@@ -32,6 +32,34 @@ func NewApp() (*App, error) {
 	router := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 
+		// In Vercel rewrites, the original path may be in query param 'path',
+		// in headers, or in r.RequestURI
+		if qPath := r.URL.Query().Get("path"); qPath != "" {
+			path = qPath
+		} else if matchedPath := r.Header.Get("X-Matched-Path"); matchedPath != "" {
+			path = matchedPath
+		} else if origPath := r.Header.Get("X-Forwarded-Uri"); origPath != "" {
+			path = strings.Split(origPath, "?")[0]
+		} else if invokePath := r.Header.Get("X-Invoke-Path"); invokePath != "" {
+			path = invokePath
+		}
+
+		if !strings.HasPrefix(path, "/") {
+			path = "/" + path
+		}
+
+		// Fallback check against r.RequestURI if path was overwritten with destination file (/api/index.go)
+		if !strings.Contains(path, "health") && !strings.Contains(path, "auth") && !strings.Contains(path, "verify") && !strings.Contains(path, "portfolio") {
+			reqURI := strings.ToLower(r.RequestURI)
+			if strings.Contains(reqURI, "auth") || strings.Contains(reqURI, "verify") {
+				path = "/api/auth/verify"
+			} else if strings.Contains(reqURI, "portfolio") {
+				path = "/api/portfolio"
+			} else if strings.Contains(reqURI, "health") {
+				path = "/api/health"
+			}
+		}
+
 		// Strip trailing slash if present (except root)
 		if len(path) > 1 && strings.HasSuffix(path, "/") {
 			path = strings.TrimSuffix(path, "/")
