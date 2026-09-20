@@ -28,55 +28,51 @@ func NewApp() (*App, error) {
 	limiter := middleware.NewRateLimiter()
 	h := handlers.NewHandler(cfg, db, limiter)
 
-	// Router setup
-	mux := http.NewServeMux()
+	// Handler dispatcher function that matches routes flexibly
+	router := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
 
-	// Register Routes
-	mux.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			h.HealthCheck(w, r)
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		// Strip trailing slash if present (except root)
+		if len(path) > 1 && strings.HasSuffix(path, "/") {
+			path = strings.TrimSuffix(path, "/")
 		}
-	})
 
-	mux.HandleFunc("/api/portfolio", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			h.GetPortfolio(w, r)
-		case http.MethodPost, http.MethodPut:
-			h.UpdatePortfolio(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+		switch {
+		case path == "/api/health" || path == "/health":
+			if r.Method == http.MethodGet {
+				h.HealthCheck(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
 
-	mux.HandleFunc("/api/auth/verify", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost || r.Method == http.MethodGet {
-			h.VerifyAuth(w, r)
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+		case path == "/api/portfolio" || path == "/portfolio":
+			switch r.Method {
+			case http.MethodGet:
+				h.GetPortfolio(w, r)
+			case http.MethodPost, http.MethodPut:
+				h.UpdatePortfolio(w, r)
+			default:
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
 
-	// Also support root fallback /
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" || r.URL.Path == "" {
+		case path == "/api/auth/verify" || path == "/auth/verify":
+			if r.Method == http.MethodPost || r.Method == http.MethodGet {
+				h.VerifyAuth(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+
+		case path == "" || path == "/" || path == "/api" || path == "/api/index.go":
 			w.Header().Set("Content-Type", "application/json")
 			w.Write([]byte(`{"service":"Portfolio Backend Go","status":"running","api":"/api/portfolio"}`))
-			return
+
+		default:
+			http.NotFound(w, r)
 		}
-		// Try routing without /api prefix if called directly on serverless path
-		if strings.HasPrefix(r.URL.Path, "/portfolio") {
-			r.URL.Path = "/api" + r.URL.Path
-			mux.ServeHTTP(w, r)
-			return
-		}
-		http.NotFound(w, r)
 	})
 
 	// Layer Middlewares
-	var handler http.Handler = mux
+	var handler http.Handler = router
 	handler = limiter.RateLimitMiddleware(handler)
 	handler = middleware.MaxBytesReader(handler)
 	handler = middleware.SecurityHeaders(handler)

@@ -3,6 +3,7 @@ package handler
 import (
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 
 	"portfolio-backend/internal/app"
@@ -30,5 +31,15 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Restore original request path if rewritten by Vercel
+	if matchedPath := r.Header.Get("X-Matched-Path"); matchedPath != "" {
+		r.URL.Path = matchedPath
+	} else if origPath := r.Header.Get("X-Forwarded-Uri"); origPath != "" {
+		r.URL.Path = strings.Split(origPath, "?")[0]
+	} else if invokePath := r.Header.Get("X-Invoke-Path"); invokePath != "" {
+		r.URL.Path = invokePath
+	}
+
 	application.Handler.ServeHTTP(w, r)
 }
+
