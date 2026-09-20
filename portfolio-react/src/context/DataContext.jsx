@@ -29,17 +29,17 @@ export function DataProvider({ children }) {
     fetchData()
   }, [])
 
-  // Check admin access via URL parameter (?admin=...) or stored session token
+  // Check admin access via URL parameter (?admin=...) — runs ONCE on mount only
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const adminKey = params.get('admin')
 
     if (adminKey) {
       verifyAdminKey(adminKey)
-    } else if (adminToken) {
+    } else if (sessionStorage.getItem('admin_token')) {
       setIsAdmin(true)
     }
-  }, [adminToken])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const verifyAdminKey = async (key) => {
     try {
