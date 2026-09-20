@@ -55,8 +55,10 @@ export function DataProvider({ children }) {
       const response = await fetch(PORTFOLIO_ENDPOINT)
       if (response.ok) {
         const apiData = await response.json()
-        setData(apiData)
-        return
+        if (apiData && apiData.profile) {
+          setData(apiData)
+          return
+        }
       }
     } catch (error) {
       console.warn('Backend no disponible, usando datos de respaldo locales:', error.message)
