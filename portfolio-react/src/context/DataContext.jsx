@@ -3,7 +3,18 @@ import fallbackData from '../data/portfolioData.json'
 
 const DataContext = createContext()
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+  // When running on production (Vercel, etc.) and not localhost
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return 'https://port-folio-mp.vercel.app/api'
+  }
+  return 'http://localhost:8080/api'
+}
+
+const API_BASE_URL = getApiBaseUrl()
 const PORTFOLIO_ENDPOINT = `${API_BASE_URL}/portfolio`
 const AUTH_VERIFY_ENDPOINT = `${API_BASE_URL}/auth/verify`
 
