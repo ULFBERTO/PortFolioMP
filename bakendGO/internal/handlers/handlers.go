@@ -246,6 +246,27 @@ func (h *Handler) RefreshSession(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Logout revokes the session in Redis and deletes the session cookie
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	ip := middleware.GetClientIP(r)
+
+	if cookie, err := r.Cookie(sessionCookieName); err == nil {
+		if sessionID, err := auth.ValidateSessionToken(cookie.Value, h.cfg.JWTSecret); err == nil && sessionID != "" {
+			_ = h.redis.RevokeAccessToken(r.Context(), sessionID)
+		}
+	}
+
+	clearSessionCookie(w)
+	h.db.LogAudit(r.Context(), ip, "AUTH_LOGOUT", true, "Cierre de sesión admin")
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":       true,
+		"authenticated": false,
+		"message":       "Sesión cerrada exitosamente",
+	})
+}
+
 // authenticateRequest validates the session cookie against Redis-stored access token
 func (h *Handler) authenticateRequest(r *http.Request) bool {
 	// 1. Try session cookie (primary method)

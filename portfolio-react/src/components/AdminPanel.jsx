@@ -49,9 +49,13 @@ export default function AdminPanel({ onClose }) {
               <span className="material-symbols-outlined text-[18px]">download</span>
               Guardar JSON
             </button>
-            <button onClick={onClose} className="flex items-center gap-2 px-4 py-2 bg-white/5 text-white rounded-lg font-bold text-sm hover:bg-white/10 transition-colors">
-              <span className="material-symbols-outlined text-[18px]">close</span>
-              Cerrar
+            <button 
+              onClick={onClose} 
+              className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg font-bold text-sm hover:bg-red-500/20 hover:text-red-300 transition-colors"
+              title="Cerrar sesión de administrador y salir"
+            >
+              <span className="material-symbols-outlined text-[18px]">logout</span>
+              Cerrar Sesión
             </button>
           </div>
         </div>

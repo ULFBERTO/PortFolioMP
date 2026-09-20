@@ -9,9 +9,10 @@ import ProjectsSection from './components/ProjectsSection'
 import ContactSection from './components/ContactSection'
 import Footer from './components/Footer'
 import AdminPanel from './components/AdminPanel'
+import CookieConsent from './components/CookieConsent'
 
 function Portfolio() {
-  const { data, isAdmin, setIsAdmin, loading } = useData()
+  const { data, isAdmin, logout, loading } = useData()
 
   if (loading || !data) {
     return (
@@ -26,7 +27,7 @@ function Portfolio() {
 
   return (
     <>
-      {isAdmin && <AdminPanel onClose={() => setIsAdmin(false)} />}
+      {isAdmin && <AdminPanel onClose={logout} />}
       
       <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white overflow-hidden h-screen flex">
         <Sidebar data={data} />
@@ -51,6 +52,8 @@ function Portfolio() {
           </div>
         </main>
       </div>
+
+      <CookieConsent />
     </>
   )
 }

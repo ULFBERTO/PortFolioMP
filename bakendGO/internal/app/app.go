@@ -58,9 +58,11 @@ func NewApp() (*App, error) {
 		}
 
 		// Fallback check against r.RequestURI if path was overwritten with destination file
-		if !strings.Contains(path, "health") && !strings.Contains(path, "auth") && !strings.Contains(path, "verify") && !strings.Contains(path, "portfolio") && !strings.Contains(path, "refresh") {
+		if !strings.Contains(path, "health") && !strings.Contains(path, "auth") && !strings.Contains(path, "verify") && !strings.Contains(path, "portfolio") && !strings.Contains(path, "refresh") && !strings.Contains(path, "logout") {
 			reqURI := strings.ToLower(r.RequestURI)
-			if strings.Contains(reqURI, "refresh") {
+			if strings.Contains(reqURI, "logout") {
+				path = "/api/auth/logout"
+			} else if strings.Contains(reqURI, "refresh") {
 				path = "/api/auth/refresh"
 			} else if strings.Contains(reqURI, "auth") || strings.Contains(reqURI, "verify") {
 				path = "/api/auth/verify"
@@ -80,6 +82,13 @@ func NewApp() (*App, error) {
 		case strings.Contains(path, "health"):
 			if r.Method == http.MethodGet {
 				h.HealthCheck(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+
+		case strings.Contains(path, "logout"):
+			if r.Method == http.MethodPost || r.Method == http.MethodGet {
+				h.Logout(w, r)
 			} else {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}
