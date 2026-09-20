@@ -17,6 +17,7 @@ const getApiBaseUrl = () => {
 const API_BASE_URL = getApiBaseUrl()
 const PORTFOLIO_ENDPOINT = `${API_BASE_URL}/portfolio`
 const AUTH_VERIFY_ENDPOINT = `${API_BASE_URL}/auth/verify`
+const AUTH_REFRESH_ENDPOINT = `${API_BASE_URL}/auth/refresh`
 
 export function DataProvider({ children }) {
   const [data, setData] = useState(null)
@@ -29,32 +30,65 @@ export function DataProvider({ children }) {
     fetchData()
   }, [])
 
-  // Check admin access via URL parameter (?admin=...) — runs ONCE on mount only
+  // Check admin access via URL parameter (?admin=...) or stored session token — runs ONCE on mount
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const adminKey = params.get('admin')
+    const checkSession = async () => {
+      const params = new URLSearchParams(window.location.search)
+      const adminKey = params.get('admin')
 
-    if (adminKey) {
-      verifyAdminKey(adminKey)
-    } else if (sessionStorage.getItem('admin_token')) {
-      setIsAdmin(true)
+      if (adminKey) {
+        await verifyAdminKey(adminKey)
+      } else if (sessionStorage.getItem('admin_active') === 'true' || sessionStorage.getItem('admin_token')) {
+        // Verify or refresh existing session via cookie
+        const refreshed = await refreshSession()
+        if (refreshed) {
+          setIsAdmin(true)
+        } else if (sessionStorage.getItem('admin_token')) {
+          setIsAdmin(true)
+        }
+      }
     }
+
+    checkSession()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const refreshSession = async () => {
+    try {
+      const res = await fetch(AUTH_REFRESH_ENDPOINT, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      const result = await res.json()
+      if (res.ok && result.authenticated) {
+        setIsAdmin(true)
+        sessionStorage.setItem('admin_active', 'true')
+        return true
+      }
+    } catch (e) {
+      console.warn('Error renovando sesión:', e)
+    }
+    return false
+  }
 
   const verifyAdminKey = async (key) => {
     try {
       const response = await fetch(`${AUTH_VERIFY_ENDPOINT}?admin=${encodeURIComponent(key)}`, {
-        method: 'POST'
+        method: 'POST',
+        credentials: 'include'
       })
       const result = await response.json()
 
-      if (response.ok && result.authenticated && result.token) {
-        setAdminToken(result.token)
-        sessionStorage.setItem('admin_token', result.token)
+      if (response.ok && result.authenticated) {
         setIsAdmin(true)
+        sessionStorage.setItem('admin_active', 'true')
+        if (result.token) {
+          setAdminToken(result.token)
+          sessionStorage.setItem('admin_token', result.token)
+        }
       } else {
         console.warn('Acceso denegado o clave incorrecta:', result.error)
         setIsAdmin(false)
+        sessionStorage.removeItem('admin_active')
       }
     } catch (error) {
       console.error('Error al validar credenciales con el backend:', error)
@@ -84,18 +118,32 @@ export function DataProvider({ children }) {
   const updateData = async (newData) => {
     setData({ ...newData })
 
-    // Save to Go Backend with JWT Authorization header
+    // Save to Go Backend with Cookie session & Bearer token fallback
     try {
       const headers = { 'Content-Type': 'application/json' }
       if (adminToken) {
         headers['Authorization'] = `Bearer ${adminToken}`
       }
 
-      const response = await fetch(PORTFOLIO_ENDPOINT, {
+      let response = await fetch(PORTFOLIO_ENDPOINT, {
         method: 'POST',
         headers,
+        credentials: 'include',
         body: JSON.stringify(newData)
       })
+
+      // If unauthorized (token/cookie expired), attempt auto-refresh and retry once
+      if (response.status === 401) {
+        const refreshed = await refreshSession()
+        if (refreshed) {
+          response = await fetch(PORTFOLIO_ENDPOINT, {
+            method: 'POST',
+            headers,
+            credentials: 'include',
+            body: JSON.stringify(newData)
+          })
+        }
+      }
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}))

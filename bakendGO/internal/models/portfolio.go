@@ -112,9 +112,8 @@ type AuthVerifyRequest struct {
 	AdminKey string `json:"adminKey"`
 }
 
-// AuthVerifyResponse with signed JWT
+// AuthVerifyResponse — token field removed (now sent as cookie)
 type AuthVerifyResponse struct {
-	Token         string `json:"token"`
-	ExpiresIn     int64  `json:"expiresIn"`
-	Authenticated bool   `json:"authenticated"`
+	Authenticated bool  `json:"authenticated"`
+	ExpiresIn     int64 `json:"expiresIn"`
 }

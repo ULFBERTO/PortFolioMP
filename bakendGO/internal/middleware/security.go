@@ -1,114 +1,61 @@
 package middleware
 
 import (
+	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
-	"golang.org/x/time/rate"
+	"portfolio-backend/internal/config"
+	redisclient "portfolio-backend/internal/redis"
 )
 
-// Client represents an IP's rate limiting state
-type Client struct {
-	limiter        *rate.Limiter
-	lastSeen       time.Time
-	failedAuths    int
-	lockoutUntil   time.Time
-}
-
-// RateLimiter manages rate limiting across IPs
+// RateLimiter manages rate limiting and auth protection via Redis
 type RateLimiter struct {
-	mu      sync.Mutex
-	clients map[string]*Client
+	redis *redisclient.Client
+	cfg   *config.Config
 }
 
-func NewRateLimiter() *RateLimiter {
-	rl := &RateLimiter{
-		clients: make(map[string]*Client),
+func NewRateLimiter(redisClient *redisclient.Client, cfg *config.Config) *RateLimiter {
+	return &RateLimiter{
+		redis: redisClient,
+		cfg:   cfg,
 	}
-
-	// Periodically clean up idle clients (every 5 minutes)
-	go func() {
-		for {
-			time.Sleep(5 * time.Minute)
-			rl.mu.Lock()
-			for ip, client := range rl.clients {
-				if time.Since(client.lastSeen) > 15*time.Minute {
-					delete(rl.clients, ip)
-				}
-			}
-			rl.mu.Unlock()
-		}
-	}()
-
-	return rl
 }
 
-// GetClient retrieves or creates a client for the given IP
-func (rl *RateLimiter) GetClient(ip string) *Client {
-	rl.mu.Lock()
-	defer rl.mu.Unlock()
-
-	client, exists := rl.clients[ip]
-	if !exists {
-		// 1 request per second with burst of 30 for general traffic
-		limiter := rate.NewLimiter(rate.Every(time.Second), 30)
-		client = &Client{
-			limiter:  limiter,
-			lastSeen: time.Now(),
-		}
-		rl.clients[ip] = client
-	}
-
-	client.lastSeen = time.Now()
-	return client
-}
-
-// CheckAuthAttempt checks if the IP is locked out or has exceeded failed attempts
+// CheckAuthAttempt checks if the IP is locked out
 func (rl *RateLimiter) CheckAuthAttempt(ip string) (bool, string) {
-	rl.mu.Lock()
-	defer rl.mu.Unlock()
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
 
-	client, exists := rl.clients[ip]
-	if !exists {
-		return true, ""
+	locked, ttl, err := rl.redis.IsIPLocked(ctx, ip)
+	if err != nil {
+		return true, "" // fail open
 	}
 
-	if time.Now().Before(client.lockoutUntil) {
-		remaining := time.Until(client.lockoutUntil).Round(time.Second)
-		return false, "Demasiados intentos fallidos. IP bloqueada temporalmente por " + remaining.String()
+	if locked {
+		remaining := ttl.Round(time.Second)
+		return false, fmt.Sprintf("Demasiados intentos fallidos. IP bloqueada temporalmente por %s", remaining)
 	}
 
 	return true, ""
 }
 
-// RecordAuthResult logs success or increment failure for brute-force defense
+// RecordAuthResult logs success or increments failure in Redis
 func (rl *RateLimiter) RecordAuthResult(ip string, success bool) {
-	rl.mu.Lock()
-	defer rl.mu.Unlock()
-
-	client, exists := rl.clients[ip]
-	if !exists {
-		limiter := rate.NewLimiter(rate.Every(time.Second), 30)
-		client = &Client{limiter: limiter, lastSeen: time.Now()}
-		rl.clients[ip] = client
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
 
 	if success {
-		client.failedAuths = 0
-		client.lockoutUntil = time.Time{}
+		rl.redis.ResetAuthFailures(ctx, ip)
 	} else {
-		client.failedAuths++
-		if client.failedAuths >= 5 {
-			// Lock out IP for 10 minutes after 5 consecutive failures
-			client.lockoutUntil = time.Now().Add(10 * time.Minute)
-		}
+		rl.redis.RecordAuthFailure(ctx, ip)
 	}
 }
 
-// GetClientIP extracts the real IP address
+// GetClientIP extracts the real IP address from the request
 func GetClientIP(r *http.Request) string {
 	forwarded := r.Header.Get("X-Forwarded-For")
 	if forwarded != "" {
@@ -128,14 +75,26 @@ func GetClientIP(r *http.Request) string {
 	return ip
 }
 
-// RateLimitMiddleware applies general rate limiting per IP
+// RateLimitMiddleware applies Redis-backed rate limiting per IP
 func (rl *RateLimiter) RateLimitMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ip := GetClientIP(r)
-		client := rl.GetClient(ip)
 
-		if !client.limiter.Allow() {
-			http.Error(w, `{"error":"Demasiadas peticiones. Límite excedido (Rate Limit)."}` , http.StatusTooManyRequests)
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+
+		allowed, err := rl.redis.CheckRateLimit(ctx, ip)
+		if err != nil {
+			// fail open on Redis errors
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		if !allowed {
+			remaining := rl.redis.GetRateLimitRemaining(ctx, ip)
+			w.Header().Set("X-RateLimit-Remaining", fmt.Sprintf("%d", remaining))
+			w.Header().Set("Retry-After", fmt.Sprintf("%d", rl.cfg.RateLimitWindow))
+			http.Error(w, `{"error":"Demasiadas peticiones. Límite excedido (Rate Limit)."}`, http.StatusTooManyRequests)
 			return
 		}
 
@@ -156,11 +115,15 @@ func SecurityHeaders(next http.Handler) http.Handler {
 	})
 }
 
-// CORS handles Cross-Origin Resource Sharing
+// CORS handles Cross-Origin Resource Sharing (with credentials support for cookies)
 func CORS(allowedOrigin string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
-		if origin != "" && (allowedOrigin == "*" || origin == allowedOrigin) {
+
+		if allowedOrigin == "*" && origin != "" {
+			// When credentials are involved, cannot use wildcard — echo origin
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		} else if origin != "" && origin == allowedOrigin {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 		} else if allowedOrigin == "*" {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -168,6 +131,7 @@ func CORS(allowedOrigin string, next http.Handler) http.Handler {
 
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Admin-Key")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Max-Age", "86400")
 
 		if r.Method == http.MethodOptions {

@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -9,11 +10,13 @@ import (
 	"portfolio-backend/internal/database"
 	"portfolio-backend/internal/handlers"
 	"portfolio-backend/internal/middleware"
+	redisclient "portfolio-backend/internal/redis"
 )
 
 type App struct {
 	Config  *config.Config
 	DB      *database.DB
+	Redis   *redisclient.Client
 	Handler http.Handler
 }
 
@@ -25,8 +28,14 @@ func NewApp() (*App, error) {
 		return nil, fmt.Errorf("failed to initialize database: %w", err)
 	}
 
-	limiter := middleware.NewRateLimiter()
-	h := handlers.NewHandler(cfg, db, limiter)
+	rc, err := redisclient.Connect(cfg)
+	if err != nil {
+		log.Printf("[App] Warning: Redis not available: %v", err)
+		return nil, fmt.Errorf("failed to initialize Redis: %w", err)
+	}
+
+	limiter := middleware.NewRateLimiter(rc, cfg)
+	h := handlers.NewHandler(cfg, db, limiter, rc)
 
 	// Handler dispatcher function that matches routes flexibly
 	router := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -48,10 +57,12 @@ func NewApp() (*App, error) {
 			path = "/" + path
 		}
 
-		// Fallback check against r.RequestURI if path was overwritten with destination file (/api/index.go)
-		if !strings.Contains(path, "health") && !strings.Contains(path, "auth") && !strings.Contains(path, "verify") && !strings.Contains(path, "portfolio") {
+		// Fallback check against r.RequestURI if path was overwritten with destination file
+		if !strings.Contains(path, "health") && !strings.Contains(path, "auth") && !strings.Contains(path, "verify") && !strings.Contains(path, "portfolio") && !strings.Contains(path, "refresh") {
 			reqURI := strings.ToLower(r.RequestURI)
-			if strings.Contains(reqURI, "auth") || strings.Contains(reqURI, "verify") {
+			if strings.Contains(reqURI, "refresh") {
+				path = "/api/auth/refresh"
+			} else if strings.Contains(reqURI, "auth") || strings.Contains(reqURI, "verify") {
 				path = "/api/auth/verify"
 			} else if strings.Contains(reqURI, "portfolio") {
 				path = "/api/portfolio"
@@ -69,6 +80,13 @@ func NewApp() (*App, error) {
 		case strings.Contains(path, "health"):
 			if r.Method == http.MethodGet {
 				h.HealthCheck(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+
+		case strings.Contains(path, "refresh"):
+			if r.Method == http.MethodPost || r.Method == http.MethodGet {
+				h.RefreshSession(w, r)
 			} else {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}
@@ -109,6 +127,7 @@ func NewApp() (*App, error) {
 	return &App{
 		Config:  cfg,
 		DB:      db,
+		Redis:   rc,
 		Handler: handler,
 	}, nil
 }
