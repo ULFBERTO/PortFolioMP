@@ -13,7 +13,7 @@ export function getInitialLanguage() {
   return SITE.defaultLang;
 }
 
-const initialLang = getInitialLanguage();
+export const initialLang = getInitialLanguage();
 
 i18n.use(initReactI18next).init({
   lng: initialLang,
@@ -51,19 +51,19 @@ export async function ensureLanguageLoaded(lng) {
   return normalized;
 }
 
-// Precarga no bloqueante del idioma inicial + fallback en idle.
+// El idioma inicial se carga de forma bloqueante en `main.jsx` antes del
+// primer render (evita flash de keys como `experience.title`).
+// Aquí solo precargamos el fallback en background para cambios rápidos ES<->EN.
 if (typeof window !== 'undefined') {
-  const preload = () =>
-    ensureLanguageLoaded(initialLang)
-      .then(() => {
-        if (initialLang !== SITE.defaultLang) return ensureLanguageLoaded(SITE.defaultLang);
-        return undefined;
-      })
-      .catch(() => undefined);
+  const preloadFallback = () => {
+    if (initialLang !== SITE.defaultLang) {
+      ensureLanguageLoaded(SITE.defaultLang).catch(() => undefined);
+    }
+  };
   if ('requestIdleCallback' in window) {
-    window.requestIdleCallback(preload, { timeout: 2000 });
+    window.requestIdleCallback(preloadFallback, { timeout: 2000 });
   } else {
-    setTimeout(preload, 0);
+    setTimeout(preloadFallback, 0);
   }
 }
 
