@@ -2,7 +2,7 @@ import { memo, useCallback, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext.jsx';
 import { NAVIGATION } from '@/config/app.js';
 
-function MobileHeader({ data }) {
+function MobileHeader({ data, activeSection }) {
   const { lang, setLang, t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const { profile } = data;
@@ -27,8 +27,15 @@ function MobileHeader({ data }) {
       {menuOpen && (
         <div className="fixed inset-0 z-40 bg-paper p-6 pt-20 lg:hidden">
           <nav className="flex flex-col gap-3" aria-label="Móvil">
-            {NAVIGATION.map((item, index) => (
-              <MobileNavLink key={item.id} href={item.href} icon={item.icon} label={t(item.i18nKey)} onClick={closeMenu} active={index === 0} />
+            {NAVIGATION.map((item) => (
+              <MobileNavLink
+                key={item.id}
+                href={item.href}
+                icon={item.icon}
+                label={t(item.i18nKey)}
+                onClick={closeMenu}
+                active={activeSection ? activeSection === item.id : item.id === 'dashboard'}
+              />
             ))}
           </nav>
         </div>

@@ -77,6 +77,22 @@ const PacketField = memo(function PacketField({ density = 7, className = '' }) {
       if (st.bursts.length > 6) st.bursts.shift();
     };
 
+    // Transmisión remota: el CTA de contacto dispara bursts aquí (cohesión entre secciones)
+    const onRemoteBurst = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const n = Math.min(5, Math.max(1, e.detail?.n ?? 2));
+      for (let k = 0; k < n; k++) {
+        st.bursts.push({
+          x: rect.width * (0.25 + Math.random() * 0.5),
+          y: rect.height * (0.3 + Math.random() * 0.4),
+          t: -k * 0.12,
+          seed: 500 + Math.floor(Math.random() * 999),
+        });
+      }
+      if (st.bursts.length > 8) st.bursts.splice(0, st.bursts.length - 8);
+    };
+    window.addEventListener('packet-burst', onRemoteBurst);
+
     canvas.addEventListener('pointermove', onMove);
     canvas.addEventListener('pointerleave', onLeave);
     canvas.addEventListener('pointerdown', onTap);
@@ -112,6 +128,7 @@ const PacketField = memo(function PacketField({ density = 7, className = '' }) {
       running = false;
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
+      window.removeEventListener('packet-burst', onRemoteBurst);
       canvas.removeEventListener('pointermove', onMove);
       canvas.removeEventListener('pointerleave', onLeave);
       canvas.removeEventListener('pointerdown', onTap);
@@ -176,6 +193,7 @@ function paint(ctx, w, h, t, st, staticFrame) {
 
   // Bursts por click (blob + ripples + gotas, escena J)
   for (const b of st.bursts) {
+    if (b.t < 0) continue; // retardo escalonado de ráfagas remotas
     const k = 1 - b.t / 1.2;
     const R = 20 + b.t * 130;
     ctx.save();

@@ -6,6 +6,10 @@ import Sidebar from '@/components/Sidebar.jsx';
 import MobileHeader from '@/components/MobileHeader.jsx';
 import HeroSection from '@/components/HeroSection.jsx';
 import StatsSection from '@/components/StatsSection.jsx';
+import Marquee from '@/shared/motion/Marquee.jsx';
+import ScrollProgress from '@/shared/motion/ScrollProgress.jsx';
+import Reveal from '@/shared/motion/Reveal.jsx';
+import { useScrollSpy } from '@/shared/motion/useScrollSpy.js';
 import { Spinner, ErrorState, SectionFallback, LazySection } from '@/shared/components/ui/index.js';
 import { ErrorBoundary } from '@/shared/components/feedback/ErrorBoundary.jsx';
 
@@ -17,6 +21,8 @@ const AdminPanel = lazy(() => import('@/components/AdminPanel.jsx'));
 const CookieConsent = lazy(() => import('@/components/CookieConsent.jsx'));
 const DoodleDivider = lazy(() => import('@/shared/components/canvas/DoodleDivider.jsx'));
 
+const SECTION_IDS = ['dashboard', 'projects', 'experience', 'contact'];
+
 const PortfolioShell = memo(function PortfolioShell({ children }) {
   return <div className="flex h-screen overflow-hidden bg-paper text-ink">{children}</div>;
 });
@@ -24,6 +30,7 @@ const PortfolioShell = memo(function PortfolioShell({ children }) {
 function Portfolio() {
   const { data, isAdmin, logout, loading, error, refetch } = useData();
   const { t } = useLanguage();
+  const activeSection = useScrollSpy(SECTION_IDS);
 
   if (loading) {
     return (
@@ -41,6 +48,7 @@ function Portfolio() {
 
   return (
     <>
+      <ScrollProgress />
       {isAdmin && (
         <Suspense fallback={null}>
           <AdminPanel onClose={logout} />
@@ -48,34 +56,44 @@ function Portfolio() {
       )}
 
       <PortfolioShell>
-        <Sidebar data={data} />
+        <Sidebar data={data} activeSection={activeSection} />
         <main className="relative h-full flex-1 overflow-y-auto">
-          <MobileHeader data={data} />
+          <MobileHeader data={data} activeSection={activeSection} />
           <div className="mx-auto flex max-w-[1400px] flex-col gap-7 p-4 lg:p-10">
             <ErrorBoundary><HeroSection data={data} /></ErrorBoundary>
-            <ErrorBoundary><StatsSection stats={data.stats} /></ErrorBoundary>
+
+            <Reveal>
+              <ErrorBoundary><StatsSection stats={data.stats} /></ErrorBoundary>
+            </Reveal>
 
             <Suspense fallback={null}><DoodleDivider seed={3} /></Suspense>
 
-            <div className="grid grid-cols-1 gap-7 xl:grid-cols-3">
-              <ErrorBoundary>
-                <LazySection minHeight={420}>
-                  <Suspense fallback={<SectionFallback minHeight={420} />}>
-                    <ExperienceSection experience={data.experience} technologies={data.technologies} />
-                  </Suspense>
-                </LazySection>
-              </ErrorBoundary>
-              <ErrorBoundary>
-                <LazySection minHeight={420}>
-                  <Suspense fallback={<SectionFallback minHeight={420} />}>
-                    <ProjectsSection projects={data.projects} />
-                  </Suspense>
-                </LazySection>
-              </ErrorBoundary>
-            </div>
+            {/* Proyectos primero y a ancho completo: el trabajo es la prueba */}
+            <ErrorBoundary>
+              <LazySection minHeight={420}>
+                <Suspense fallback={<SectionFallback minHeight={420} />}>
+                  <ProjectsSection projects={data.projects} />
+                </Suspense>
+              </LazySection>
+            </ErrorBoundary>
 
-            <Suspense fallback={null}><DoodleDivider seed={9} /></Suspense>
+            <Suspense fallback={null}><DoodleDivider seed={6} /></Suspense>
 
+            <ErrorBoundary>
+              <LazySection minHeight={420}>
+                <Suspense fallback={<SectionFallback minHeight={420} />}>
+                  <ExperienceSection experience={data.experience} technologies={data.technologies} />
+                </Suspense>
+              </LazySection>
+            </ErrorBoundary>
+          </div>
+
+          {/* Cinta de tecnologías a sangre: rompe la columna y da ritmo */}
+          <div className="my-7 -rotate-1">
+            <Marquee items={data.technologies} />
+          </div>
+
+          <div className="mx-auto flex max-w-[1400px] flex-col gap-7 p-4 pt-0 lg:p-10 lg:pt-0">
             <ErrorBoundary>
               <LazySection minHeight={200}>
                 <Suspense fallback={<SectionFallback minHeight={200} />}>

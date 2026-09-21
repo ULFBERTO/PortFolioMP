@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { useLanguage } from '@/context/LanguageContext.jsx';
 import { NAVIGATION } from '@/config/app.js';
 
-function Sidebar({ data }) {
+function Sidebar({ data, activeSection }) {
   const { lang, setLang, t } = useLanguage();
   const { profile, sidebar } = data;
 
@@ -20,8 +20,14 @@ function Sidebar({ data }) {
         </div>
 
         <nav className="flex flex-col gap-2" aria-label="Principal">
-          {NAVIGATION.map((item, index) => (
-            <NavLink key={item.id} href={item.href} icon={item.icon} label={t(item.i18nKey)} active={index === 0} />
+          {NAVIGATION.map((item) => (
+            <NavLink
+              key={item.id}
+              href={item.href}
+              icon={item.icon}
+              label={t(item.i18nKey)}
+              active={activeSection ? activeSection === item.id : item.id === 'dashboard'}
+            />
           ))}
         </nav>
 

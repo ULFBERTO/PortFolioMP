@@ -2,6 +2,8 @@ import { Suspense, lazy, memo, useCallback, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext.jsx';
 import { LazyImage } from '@/shared/components/ui/index.js';
 import { SectionHead, TechTag } from '@/shared/components/ui/Ink.jsx';
+import Reveal from '@/shared/motion/Reveal.jsx';
+import Tilt from '@/shared/motion/Tilt.jsx';
 
 const ProjectModal = lazy(() => import('./ProjectModal.jsx'));
 
@@ -16,7 +18,11 @@ function ProjectsSection({ projects }) {
       <SectionHead kicker="// réplica x2 x4 x8" title={t('projects.title')} icon="view_kanban" />
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         {projects.map((project, i) => (
-          <ProjectCard key={project.id} project={project} index={i} onClick={() => handleSelect(project)} />
+          <Reveal key={project.id} delay={(i % 4) * 100} rotate={i % 2 ? 0.8 : -0.8} className="h-full">
+            <Tilt className="h-full">
+              <ProjectCard project={project} index={i} onClick={() => handleSelect(project)} />
+            </Tilt>
+          </Reveal>
         ))}
       </div>
       {selectedProject && (
@@ -39,7 +45,7 @@ const ProjectCard = memo(function ProjectCard({ project, index, onClick }) {
       tabIndex={0}
       role="button"
       aria-label={project.title}
-      className="project-card group relative flex cursor-pointer flex-col overflow-hidden bg-[#fffdf7]"
+      className="project-card group relative flex h-full cursor-pointer flex-col overflow-hidden bg-[#fffdf7]"
       style={{
         border: '2.5px solid #1e1630',
         borderRadius: index % 2 ? '15px 225px 15px 255px / 255px 15px 225px 15px' : '255px 15px 225px 15px / 15px 225px 15px 255px',
@@ -48,6 +54,9 @@ const ProjectCard = memo(function ProjectCard({ project, index, onClick }) {
     >
       <span className="absolute -top-2 left-8 z-10 rotate-[-4deg] border border-ink/30 bg-paperdeep px-2 font-mono text-[10px] font-bold uppercase tracking-widest">
         seed {100 + index * 17}
+      </span>
+      <span className="stamp absolute bottom-24 right-4 z-10 rounded border-[2.5px] border-blush bg-paper px-3 py-1 font-mono text-xs font-bold uppercase tracking-widest text-blush" aria-hidden>
+        abrir →
       </span>
       <div className="relative flex h-44 w-full items-center justify-center overflow-hidden border-b-[2.5px] border-ink bg-paper">
         {project.imageUrl ? (
