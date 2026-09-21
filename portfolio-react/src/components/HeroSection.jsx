@@ -26,7 +26,7 @@ const RotatingRoles = memo(function RotatingRoles({ roles }) {
   );
 });
 
-function HeroSection({ data }) {
+function HeroSection({ data, canvas = true }) {
   const { lang } = useLanguage();
   const { profile, hero } = data;
   const firstName = useMemo(() => profile.name.split(' ').slice(0, 2).join(' '), [profile.name]);
@@ -69,6 +69,7 @@ function HeroSection({ data }) {
 
   return (
     <section id="dashboard" className="ink-card tape relative overflow-hidden p-0">
+      {canvas && (
       <div className="relative h-[340px] overflow-hidden md:h-[400px]">
         <div ref={canvasWrap} className="absolute inset-0 will-change-transform">
           <Suspense fallback={<div className="absolute inset-0 bg-paper" />}>
@@ -91,6 +92,7 @@ function HeroSection({ data }) {
           </span>
         </a>
       </div>
+      )}
 
       <div className="relative z-10 flex flex-col gap-4 p-6 md:p-10">
         <Reveal from="none">

@@ -11,7 +11,6 @@ import (
 type Config struct {
 	DatabaseURL   string
 	Port          string
-	AdminKey      string
 	JWTSecret     string
 	AllowedOrigin string
 
@@ -29,6 +28,9 @@ type Config struct {
 	// Auth Brute-Force Protection
 	AuthMaxAttempts int // Failed attempts before lockout
 	AuthLockoutTTL  int // Lockout duration in seconds
+
+	// CookieSecure=false solo para desarrollo local por http (prod siempre true)
+	CookieSecure bool
 }
 
 func Load() *Config {
@@ -43,11 +45,6 @@ func Load() *Config {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
-	}
-
-	adminKey := os.Getenv("ADMIN_KEY")
-	if adminKey == "" {
-		adminKey = "mario2026"
 	}
 
 	jwtSecret := os.Getenv("JWT_SECRET")
@@ -69,10 +66,14 @@ func Load() *Config {
 		dbURL = strings.Replace(dbURL, "?channel_binding=require", "?", 1)
 	}
 
+	cookieSecure := true
+	if v := os.Getenv("COOKIE_SECURE"); strings.ToLower(strings.TrimSpace(v)) == "false" {
+		cookieSecure = false
+	}
+
 	return &Config{
 		DatabaseURL:   dbURL,
 		Port:          port,
-		AdminKey:      adminKey,
 		JWTSecret:     jwtSecret,
 		AllowedOrigin: allowedOrigin,
 
@@ -84,6 +85,7 @@ func Load() *Config {
 		RateLimitMax:    envInt("RATE_LIMIT_MAX", 60),       // 60 req/min
 		AuthMaxAttempts: envInt("AUTH_MAX_ATTEMPTS", 5),      // 5 fails
 		AuthLockoutTTL:  envInt("AUTH_LOCKOUT_TTL", 600),    // 10 minutes
+		CookieSecure:    cookieSecure,
 	}
 }
 

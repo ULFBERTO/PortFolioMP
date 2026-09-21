@@ -24,8 +24,8 @@ export const ENV = Object.freeze({
 });
 
 export const API_ENDPOINTS = Object.freeze({
+  base: ENV.API_BASE_URL,
   portfolio: `${ENV.API_BASE_URL}/portfolio`,
-  authVerify: `${ENV.API_BASE_URL}/auth/verify`,
   authRefresh: `${ENV.API_BASE_URL}/auth/refresh`,
   authLogout: `${ENV.API_BASE_URL}/auth/logout`,
 });

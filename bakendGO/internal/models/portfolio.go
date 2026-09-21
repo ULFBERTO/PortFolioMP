@@ -107,13 +107,4 @@ type PortfolioData struct {
 	Footer       Footer           `json:"footer"`
 }
 
-// AuthVerifyRequest for admin key verification
-type AuthVerifyRequest struct {
-	AdminKey string `json:"adminKey"`
-}
 
-// AuthVerifyResponse — token field removed (now sent as cookie)
-type AuthVerifyResponse struct {
-	Authenticated bool  `json:"authenticated"`
-	ExpiresIn     int64 `json:"expiresIn"`
-}

@@ -25,8 +25,6 @@ export default defineConfig({
           // Vendor React separado: cambia poco → se cachea largo tiempo.
           'vendor-react': ['react', 'react-dom'],
           'vendor-i18n': ['i18next', 'react-i18next'],
-          // Admin es pesado y rara vez se usa → chunk aislado bajo demanda.
-          admin: ['./src/components/AdminPanel.jsx'],
         },
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',

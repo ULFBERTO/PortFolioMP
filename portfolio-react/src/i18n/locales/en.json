@@ -22,6 +22,9 @@
     "errorTitle": "Error loading data",
     "errorConnectionDesc": "Unable to connect to the backend server. Please make sure the Go backend is running."
   },
+  "contact": {
+    "sendEmail": "Send Email"
+  },
   "experience": {
     "title": "Experience Timeline"
   },

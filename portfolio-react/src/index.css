@@ -169,3 +169,30 @@ html[data-motion="full"] .stamp {
   transform: rotate(-8deg) scale(0.6);
   opacity: 0;
 }
+
+/* ===== Plantillas de CV (data-template en CVView) ===== */
+/* executive: sobrio, sin canvas, tarjetas planas */
+[data-template="executive"] canvas { display: none; }
+[data-template="executive"] .ink-card,
+[data-template="executive"] .ink-card-flat,
+[data-template="executive"] .sticky {
+  border-radius: 12px;
+  box-shadow: 2px 3px 0 rgba(30, 22, 48, 0.85);
+  transform: none;
+}
+[data-template="executive"] .tape::before,
+[data-template="executive"] .tape::after { display: none; }
+
+/* minimal: texto al centro, cero adornos */
+[data-template="minimal"] canvas { display: none; }
+[data-template="minimal"] .ink-card,
+[data-template="minimal"] .ink-card-flat,
+[data-template="minimal"] .sticky {
+  border-radius: 10px;
+  box-shadow: none;
+  transform: none;
+  background: #fffdf7;
+}
+[data-template="minimal"] .tape::before,
+[data-template="minimal"] .tape::after { display: none; }
+[data-template="minimal"] .marquee { display: none; }

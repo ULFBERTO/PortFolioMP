@@ -1,121 +1,119 @@
 package auth
 
 import (
-	"crypto/subtle"
 	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
-type AdminClaims struct {
-	Role string `json:"role"`
-	jwt.RegisteredClaims
-}
-
-// SessionClaims for the short-lived session token (stored in cookie)
+// SessionClaims for the short-lived session token (stored in cookie).
+// It now carries the user identity + role for the multi-user platform.
 type SessionClaims struct {
 	SessionID string `json:"sid"`
+	UserID    string `json:"uid,omitempty"`
 	Role      string `json:"role"`
 	jwt.RegisteredClaims
 }
 
-// VerifyAdminKey compares keys using constant time comparison to defeat timing attacks
-func VerifyAdminKey(inputKey, expectedKey string) bool {
-	if inputKey == "" || expectedKey == "" {
-		return false
-	}
-	return subtle.ConstantTimeCompare([]byte(inputKey), []byte(expectedKey)) == 1
+// UserAccessClaims for the long-lived access token stored in Redis.
+type UserAccessClaims struct {
+	UserID string `json:"uid"`
+	Role   string `json:"role"`
+	jwt.RegisteredClaims
 }
 
-// GenerateAccessToken creates a long-lived JWT to be stored in Redis (never sent to browser)
-func GenerateAccessToken(secret string, ttlSeconds int) (string, error) {
-	expirationTime := time.Now().Add(time.Duration(ttlSeconds) * time.Second)
+// HashPassword hashes a plaintext password with bcrypt.
+func HashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
+}
 
-	claims := &AdminClaims{
-		Role: "admin",
+// CheckPassword compares a bcrypt hash with a plaintext password.
+func CheckPassword(hash, password string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
+}
+
+// GenerateUserAccessToken creates a long-lived JWT for a user (stored in Redis).
+func GenerateUserAccessToken(secret, userID, role string, ttlSeconds int) (string, error) {
+	expirationTime := time.Now().Add(time.Duration(ttlSeconds) * time.Second)
+	claims := &UserAccessClaims{
+		UserID: userID,
+		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Subject:   "admin-access",
+			Subject:   "user-access",
 		},
 	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
 }
 
-// GenerateSessionToken creates a short-lived JWT containing the sessionID (sent as cookie)
-func GenerateSessionToken(secret, sessionID string, ttlSeconds int) (string, int64, error) {
+// ValidateUserAccessToken verifies a user access token and returns userID + role.
+func ValidateUserAccessToken(tokenStr, secret string) (userID, role string, ok bool) {
+	if tokenStr == "" {
+		return "", "", false
+	}
+	token, err := jwt.ParseWithClaims(tokenStr, &UserAccessClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return []byte(secret), nil
+	})
+	if err != nil || !token.Valid {
+		return "", "", false
+	}
+	claims, ok := token.Claims.(*UserAccessClaims)
+	if !ok || claims.UserID == "" {
+		return "", "", false
+	}
+	return claims.UserID, claims.Role, true
+}
+
+// GenerateUserSessionToken creates a short-lived session JWT for a user (cookie).
+func GenerateUserSessionToken(secret, sessionID, userID, role string, ttlSeconds int) (string, int64, error) {
 	expiresIn := int64(ttlSeconds)
 	expirationTime := time.Now().Add(time.Duration(expiresIn) * time.Second)
-
 	claims := &SessionClaims{
 		SessionID: sessionID,
-		Role:      "admin",
+		UserID:    userID,
+		Role:      role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Subject:   "admin-session",
+			Subject:   "user-session",
 		},
 	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
 		return "", 0, err
 	}
-
 	return tokenString, expiresIn, nil
 }
 
-// ValidateSessionToken verifies the session token and returns the sessionID
-func ValidateSessionToken(tokenStr, secret string) (string, error) {
+// ValidateUserSessionToken verifies a session token and returns sessionID, userID, role.
+func ValidateUserSessionToken(tokenStr, secret string) (sessionID, userID, role string, err error) {
 	if tokenStr == "" {
-		return "", errors.New("empty token")
+		return "", "", "", errors.New("empty token")
 	}
-
 	token, err := jwt.ParseWithClaims(tokenStr, &SessionClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
 		}
 		return []byte(secret), nil
 	})
-
 	if err != nil || !token.Valid {
-		return "", errors.New("invalid or expired session token")
+		return "", "", "", errors.New("invalid or expired session token")
 	}
-
 	claims, ok := token.Claims.(*SessionClaims)
 	if !ok || claims.SessionID == "" {
-		return "", errors.New("invalid session claims")
+		return "", "", "", errors.New("invalid session claims")
 	}
-
-	return claims.SessionID, nil
-}
-
-// ValidateAccessToken verifies the access token signature and expiration
-func ValidateAccessToken(tokenStr, secret string) bool {
-	if tokenStr == "" {
-		return false
-	}
-
-	token, err := jwt.ParseWithClaims(tokenStr, &AdminClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("unexpected signing method")
-		}
-		return []byte(secret), nil
-	})
-
-	return err == nil && token.Valid
-}
-
-// Legacy function kept for backward compatibility
-func GenerateJWT(secret string) (string, int64, error) {
-	return GenerateSessionToken(secret, "legacy", 7200)
-}
-
-// Legacy function kept for backward compatibility
-func ValidateJWT(tokenStr, secret string) bool {
-	return ValidateAccessToken(tokenStr, secret)
+	return claims.SessionID, claims.UserID, claims.Role, nil
 }

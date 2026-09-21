@@ -46,6 +46,9 @@ func Connect(connStr string) (*DB, error) {
 		log.Printf("[DB] Warning during auto-migration: %v", err)
 	}
 
+	// Multi-user platform seeding: admin (env) + legacy portfolio -> CV
+	database.SeedPlatform(ctx)
+
 	return database, nil
 }
 
@@ -68,6 +71,36 @@ func (d *DB) AutoMigrate(ctx context.Context) error {
 		details TEXT,
 		created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 	);
+
+	CREATE TABLE IF NOT EXISTS users (
+		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+		email TEXT NOT NULL,
+		password_hash TEXT NOT NULL,
+		role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('admin','user')),
+		email_verified BOOLEAN NOT NULL DEFAULT false,
+		verification_code_hash TEXT,
+		verification_expires_at TIMESTAMP WITH TIME ZONE,
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+		updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+		CONSTRAINT users_email_unique UNIQUE (email)
+	);
+	CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_idx ON users (lower(email));
+
+	CREATE TABLE IF NOT EXISTS cvs (
+		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+		owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		slug TEXT NOT NULL,
+		title TEXT NOT NULL DEFAULT '',
+		profession TEXT NOT NULL DEFAULT 'general' CHECK (profession IN ('developer','designer','general')),
+		template TEXT NOT NULL DEFAULT 'hand-drawn' CHECK (template IN ('hand-drawn','executive','minimal')),
+		visibility TEXT NOT NULL DEFAULT 'public' CHECK (visibility IN ('public','private')),
+		data JSONB NOT NULL DEFAULT '{}',
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+		updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+		CONSTRAINT cvs_slug_unique UNIQUE (slug)
+	);
+	CREATE UNIQUE INDEX IF NOT EXISTS cvs_slug_lower_idx ON cvs (lower(slug));
+	CREATE INDEX IF NOT EXISTS cvs_owner_idx ON cvs (owner_id);
 	`
 
 	_, err := d.SQL.ExecContext(ctx, createTablesSQL)

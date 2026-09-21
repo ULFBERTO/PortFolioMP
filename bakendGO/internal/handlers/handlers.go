@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 	"time"
 
 	"portfolio-backend/internal/auth"
@@ -74,126 +73,47 @@ func (h *Handler) GetPortfolio(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(portfolio)
 }
 
-// setSessionCookie writes the session token as an HttpOnly Secure cookie
+// setSessionCookie writes the session token as an HttpOnly cookie
+// (Secure + SameSite=None in production for cross-site; COOKIE_SECURE=false
+// only for local http development).
 func (h *Handler) setSessionCookie(w http.ResponseWriter, sessionToken string) {
+	sameSite := http.SameSiteNoneMode
+	if !h.cfg.CookieSecure {
+		sameSite = http.SameSiteLaxMode
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookieName,
 		Value:    sessionToken,
 		Path:     "/",
 		MaxAge:   h.cfg.SessionTokenTTL,
 		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode, // Required for cross-site cookies
+		Secure:   h.cfg.CookieSecure,
+		SameSite: sameSite,
 	})
 }
 
 // clearSessionCookie removes the session cookie
-func clearSessionCookie(w http.ResponseWriter) {
+func (h *Handler) clearSessionCookie(w http.ResponseWriter) {
+	sameSite := http.SameSiteNoneMode
+	if !h.cfg.CookieSecure {
+		sameSite = http.SameSiteLaxMode
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookieName,
 		Value:    "",
 		Path:     "/",
 		MaxAge:   -1,
 		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
+		Secure:   h.cfg.CookieSecure,
+		SameSite: sameSite,
 	})
 }
 
-// VerifyAuth validates admin credentials, stores access token in Redis, returns session cookie
-func (h *Handler) VerifyAuth(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	ip := middleware.GetClientIP(r)
-
-	// Check brute force / lockout state
-	allowed, lockMsg := h.limiter.CheckAuthAttempt(ip)
-	if !allowed {
-		w.WriteHeader(http.StatusTooManyRequests)
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"authenticated": false,
-			"error":         lockMsg,
-		})
-		return
-	}
-
-	// Extract admin key from URL param, Header, JSON body, or RequestURI
-	var inputKey string
-	if key := r.URL.Query().Get("admin"); key != "" {
-		inputKey = key
-	} else if key := r.Header.Get("X-Admin-Key"); key != "" {
-		inputKey = key
-	} else if r.Method == http.MethodPost && r.Body != nil {
-		var req models.AuthVerifyRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err == nil && req.AdminKey != "" {
-			inputKey = req.AdminKey
-		}
-	}
-
-	// Fallback extraction from RequestURI if query param was consumed during rewrites
-	if inputKey == "" && strings.Contains(r.RequestURI, "admin=") {
-		parts := strings.Split(r.RequestURI, "admin=")
-		if len(parts) > 1 {
-			val := strings.Split(parts[1], "&")[0]
-			inputKey = val
-		}
-	}
-
-	// Verify constant time against configured key
-	isValidKey := auth.VerifyAdminKey(inputKey, h.cfg.AdminKey) ||
-		auth.VerifyAdminKey(inputKey, "mario2026") ||
-		auth.VerifyAdminKey(inputKey, "mario2024")
-
-	if !isValidKey {
-		h.limiter.RecordAuthResult(ip, false)
-		h.db.LogAudit(r.Context(), ip, "AUTH_FAIL", false, "Intento fallido de autenticación admin")
-
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"authenticated": false,
-			"error":         "Clave de administrador incorrecta",
-		})
-		return
-	}
-
-	// Successful login
-	h.limiter.RecordAuthResult(ip, true)
-	h.db.LogAudit(r.Context(), ip, "AUTH_SUCCESS", true, "Acceso concedido a panel admin")
-
-	// Generate access token (stored in Redis, never sent to browser)
-	accessToken, err := auth.GenerateAccessToken(h.cfg.JWTSecret, h.cfg.AccessTokenTTL)
-	if err != nil {
-		http.Error(w, `{"error":"Error al generar access token"}`, http.StatusInternalServerError)
-		return
-	}
-
-	// Generate session ID and store access token in Redis
-	sessionID := redisclient.GenerateSessionID()
-	if err := h.redis.StoreAccessToken(r.Context(), sessionID, accessToken); err != nil {
-		http.Error(w, `{"error":"Error al almacenar sesión en Redis"}`, http.StatusInternalServerError)
-		return
-	}
-
-	// Generate session token (short-lived, sent as HttpOnly cookie)
-	sessionToken, expiresIn, err := auth.GenerateSessionToken(h.cfg.JWTSecret, sessionID, h.cfg.SessionTokenTTL)
-	if err != nil {
-		http.Error(w, `{"error":"Error al generar session token"}`, http.StatusInternalServerError)
-		return
-	}
-
-	// Set the session cookie
-	h.setSessionCookie(w, sessionToken)
-
-	json.NewEncoder(w).Encode(models.AuthVerifyResponse{
-		Authenticated: true,
-		ExpiresIn:     expiresIn,
-	})
-}
-
-// RefreshSession validates the current session cookie and issues a new one
+// RefreshSession validates the current user session cookie and issues a new one.
+// POST /api/auth/refresh
 func (h *Handler) RefreshSession(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Read session cookie
 	cookie, err := r.Cookie(sessionCookieName)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -204,10 +124,9 @@ func (h *Handler) RefreshSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate session token and extract sessionID
-	sessionID, err := auth.ValidateSessionToken(cookie.Value, h.cfg.JWTSecret)
-	if err != nil {
-		clearSessionCookie(w)
+	sessionID, uid, _, err := auth.ValidateUserSessionToken(cookie.Value, h.cfg.JWTSecret)
+	if err != nil || uid == "" {
+		h.clearSessionCookie(w)
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"authenticated": false,
@@ -216,10 +135,18 @@ func (h *Handler) RefreshSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the access token still exists in Redis
 	accessToken, err := h.redis.GetAccessToken(r.Context(), sessionID)
 	if err != nil || accessToken == "" {
-		clearSessionCookie(w)
+		h.clearSessionCookie(w)
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"authenticated": false,
+			"error":         "Sesión revocada o expirada en el servidor",
+		})
+		return
+	}
+	if _, _, valid := auth.ValidateUserAccessToken(accessToken, h.cfg.JWTSecret); !valid {
+		h.clearSessionCookie(w)
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"authenticated": false,
@@ -228,11 +155,21 @@ func (h *Handler) RefreshSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Extend access token TTL in Redis
 	h.redis.RefreshAccessToken(r.Context(), sessionID)
 
-	// Issue a new session token with fresh TTL
-	newSessionToken, expiresIn, err := auth.GenerateSessionToken(h.cfg.JWTSecret, sessionID, h.cfg.SessionTokenTTL)
+	// Releer el usuario (el rol pudo cambiar) y reemitir sesión
+	u, err := h.db.GetUserByID(r.Context(), uid)
+	if err != nil {
+		h.clearSessionCookie(w)
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"authenticated": false,
+			"error":         "Usuario no existe",
+		})
+		return
+	}
+
+	newSessionToken, expiresIn, err := auth.GenerateUserSessionToken(h.cfg.JWTSecret, sessionID, u.ID, u.Role, h.cfg.SessionTokenTTL)
 	if err != nil {
 		http.Error(w, `{"error":"Error al renovar sesión"}`, http.StatusInternalServerError)
 		return
@@ -240,78 +177,23 @@ func (h *Handler) RefreshSession(w http.ResponseWriter, r *http.Request) {
 
 	h.setSessionCookie(w, newSessionToken)
 
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"authenticated": true,
-		"expiresIn":     expiresIn,
+	json.NewEncoder(w).Encode(models.AuthResponse{
+		Authenticated: true,
+		User:          u.Public(),
+		ExpiresIn:     expiresIn,
 	})
 }
 
-// Logout revokes the session in Redis and deletes the session cookie
-func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	ip := middleware.GetClientIP(r)
-
-	if cookie, err := r.Cookie(sessionCookieName); err == nil {
-		if sessionID, err := auth.ValidateSessionToken(cookie.Value, h.cfg.JWTSecret); err == nil && sessionID != "" {
-			_ = h.redis.RevokeAccessToken(r.Context(), sessionID)
-		}
-	}
-
-	clearSessionCookie(w)
-	h.db.LogAudit(r.Context(), ip, "AUTH_LOGOUT", true, "Cierre de sesión admin")
-
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"success":       true,
-		"authenticated": false,
-		"message":       "Sesión cerrada exitosamente",
-	})
-}
-
-// authenticateRequest validates the session cookie against Redis-stored access token
-func (h *Handler) authenticateRequest(r *http.Request) bool {
-	// 1. Try session cookie (primary method)
-	cookie, err := r.Cookie(sessionCookieName)
-	if err == nil {
-		sessionID, err := auth.ValidateSessionToken(cookie.Value, h.cfg.JWTSecret)
-		if err == nil && sessionID != "" {
-			accessToken, err := h.redis.GetAccessToken(r.Context(), sessionID)
-			if err == nil && accessToken != "" {
-				if auth.ValidateAccessToken(accessToken, h.cfg.JWTSecret) {
-					return true
-				}
-			}
-		}
-	}
-
-	// 2. Fallback to Bearer token (backward compat / direct API usage)
-	authHeader := r.Header.Get("Authorization")
-	if strings.HasPrefix(authHeader, "Bearer ") {
-		token := strings.TrimPrefix(authHeader, "Bearer ")
-		if auth.ValidateAccessToken(token, h.cfg.JWTSecret) {
-			return true
-		}
-	}
-
-	// 3. Fallback to X-Admin-Key or ?admin=...
-	if key := r.Header.Get("X-Admin-Key"); key != "" && auth.VerifyAdminKey(key, h.cfg.AdminKey) {
-		return true
-	}
-	if key := r.URL.Query().Get("admin"); key != "" && auth.VerifyAdminKey(key, h.cfg.AdminKey) {
-		return true
-	}
-
-	return false
-}
-
-// UpdatePortfolio updates portfolio data in PostgreSQL
+// UpdatePortfolio updates the legacy single-row portfolio (admin only).
+// Kept for backward compatibility; new CVs use /api/cvs.
 func (h *Handler) UpdatePortfolio(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	ip := middleware.GetClientIP(r)
 
-	if !h.authenticateRequest(r) {
+	if _, ok := h.requireAdmin(r); !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"error": "No autorizado. Se requiere sesión válida o clave de administración.",
+			"error": "No autorizado. Se requiere sesión de administrador.",
 		})
 		return
 	}

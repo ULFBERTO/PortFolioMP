@@ -57,69 +57,161 @@ func NewApp() (*App, error) {
 			path = "/" + path
 		}
 
-		// Fallback check against r.RequestURI if path was overwritten with destination file
-		if !strings.Contains(path, "health") && !strings.Contains(path, "auth") && !strings.Contains(path, "verify") && !strings.Contains(path, "portfolio") && !strings.Contains(path, "refresh") && !strings.Contains(path, "logout") {
-			reqURI := strings.ToLower(r.RequestURI)
-			if strings.Contains(reqURI, "logout") {
-				path = "/api/auth/logout"
-			} else if strings.Contains(reqURI, "refresh") {
-				path = "/api/auth/refresh"
-			} else if strings.Contains(reqURI, "auth") || strings.Contains(reqURI, "verify") {
-				path = "/api/auth/verify"
-			} else if strings.Contains(reqURI, "portfolio") {
-				path = "/api/portfolio"
-			} else if strings.Contains(reqURI, "health") {
-				path = "/api/health"
-			}
+		// Normalize: strip /api prefix and trailing slash for matching
+		norm := path
+		if strings.HasPrefix(norm, "/api/") {
+			norm = norm[4:]
+		} else if norm == "/api" {
+			norm = "/"
 		}
+		if len(norm) > 1 && strings.HasSuffix(norm, "/") {
+			norm = strings.TrimSuffix(norm, "/")
+		}
+		seg := strings.Split(strings.Trim(norm, "/"), "/")
 
-		// Strip trailing slash if present (except root)
-		if len(path) > 1 && strings.HasSuffix(path, "/") {
-			path = strings.TrimSuffix(path, "/")
+		methodNotAllowed := func() {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 
 		switch {
-		case strings.Contains(path, "health"):
+		case norm == "/" || norm == "":
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte(`{"service":"Portfolio CV Platform Go","status":"running"}`))
+			return
+
+		case norm == "/health":
 			if r.Method == http.MethodGet {
 				h.HealthCheck(w, r)
 			} else {
-				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				methodNotAllowed()
 			}
+			return
 
-		case strings.Contains(path, "logout"):
-			if r.Method == http.MethodPost || r.Method == http.MethodGet {
-				h.Logout(w, r)
+		// ---- Auth (email + password). El login por ?admin= quedó desactivado.
+		case norm == "/auth/register":
+			if r.Method == http.MethodPost {
+				h.Register(w, r)
 			} else {
-				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				methodNotAllowed()
 			}
+			return
 
-		case strings.Contains(path, "refresh"):
+		case norm == "/auth/login":
+			if r.Method == http.MethodPost {
+				h.Login(w, r)
+			} else {
+				methodNotAllowed()
+			}
+			return
+
+		case norm == "/auth/me":
+			if r.Method == http.MethodGet {
+				h.Me(w, r)
+			} else {
+				methodNotAllowed()
+			}
+			return
+
+		case norm == "/auth/refresh":
 			if r.Method == http.MethodPost || r.Method == http.MethodGet {
 				h.RefreshSession(w, r)
 			} else {
-				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				methodNotAllowed()
 			}
+			return
 
-		case strings.Contains(path, "auth") || strings.Contains(path, "verify"):
+		case norm == "/auth/logout":
 			if r.Method == http.MethodPost || r.Method == http.MethodGet {
-				h.VerifyAuth(w, r)
+				h.LogoutUser(w, r)
 			} else {
-				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				methodNotAllowed()
 			}
+			return
 
-		case strings.Contains(path, "portfolio"):
+		// ---- CVs del usuario autenticado
+		case norm == "/cvs/mine":
+			if r.Method == http.MethodGet {
+				h.ListMyCVs(w, r)
+			} else {
+				methodNotAllowed()
+			}
+			return
+
+		case norm == "/cvs":
+			if r.Method == http.MethodPost {
+				h.CreateCV(w, r)
+			} else {
+				methodNotAllowed()
+			}
+			return
+
+		case len(seg) == 2 && seg[0] == "cvs":
+			id := seg[1]
+			switch r.Method {
+			case http.MethodGet:
+				h.GetCV(w, r, id)
+			case http.MethodPut, http.MethodPatch:
+				h.UpdateCV(w, r, id)
+			case http.MethodDelete:
+				h.DeleteCV(w, r, id)
+			default:
+				methodNotAllowed()
+			}
+			return
+
+		// ---- CV pública por slug: GET /api/cv/:slug (URL exacta)
+		case len(seg) == 2 && seg[0] == "cv":
+			if r.Method == http.MethodGet {
+				h.GetPublicCV(w, r, seg[1])
+			} else {
+				methodNotAllowed()
+			}
+			return
+
+		// ---- Admin
+		case norm == "/admin/users":
+			if r.Method == http.MethodGet {
+				h.ListUsers(w, r)
+			} else {
+				methodNotAllowed()
+			}
+			return
+
+		case len(seg) == 4 && seg[0] == "admin" && seg[1] == "users" && seg[3] == "role":
+			if r.Method == http.MethodPatch || r.Method == http.MethodPut {
+				h.SetUserRole(w, r, seg[2])
+			} else {
+				methodNotAllowed()
+			}
+			return
+
+		case len(seg) == 3 && seg[0] == "admin" && seg[1] == "users":
+			if r.Method == http.MethodDelete {
+				h.DeleteUser(w, r, seg[2])
+			} else {
+				methodNotAllowed()
+			}
+			return
+
+		case norm == "/admin/cvs":
+			if r.Method == http.MethodGet {
+				h.ListAllCVs(w, r)
+			} else {
+				methodNotAllowed()
+			}
+			return
+
+		// ---- Legacy: portafolio único (GET público, POST solo admin)
+		case norm == "/portfolio":
 			switch r.Method {
 			case http.MethodGet:
 				h.GetPortfolio(w, r)
 			case http.MethodPost, http.MethodPut:
 				h.UpdatePortfolio(w, r)
 			default:
-				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				methodNotAllowed()
 			}
-
-		case path == "" || path == "/" || path == "/api" || path == "/api/index.go":
-			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`{"service":"Portfolio Backend Go","status":"running","api":"/api/portfolio"}`))
+			return
 
 		default:
 			http.NotFound(w, r)

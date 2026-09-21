@@ -22,6 +22,9 @@
     "errorTitle": "Error al cargar los datos",
     "errorConnectionDesc": "No fue posible conectar con el servidor backend. Por favor, asegúrate de que el backend de Go esté iniciado."
   },
+  "contact": {
+    "sendEmail": "Enviar Email"
+  },
   "experience": {
     "title": "Línea de Experiencia"
   },
