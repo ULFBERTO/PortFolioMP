@@ -25,17 +25,17 @@ const ProjectModal = memo(function ProjectModal({ project, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 p-4 backdrop-blur-sm animate-fadeIn"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label={project.title}
     >
       <div
-        className="bg-surface-dark rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-white/10 shadow-2xl animate-scaleIn"
+        className="ink-card max-h-[90vh] w-full max-w-4xl overflow-y-auto animate-scaleIn"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className={`h-64 w-full bg-gradient-to-br ${project.gradient} relative flex items-center justify-center overflow-hidden`}>
+        <div className="relative flex h-64 w-full items-center justify-center overflow-hidden border-b-[2.5px] border-ink bg-paper">
           {project.imageUrl ? (
             <LazyImage
               src={project.imageUrl}
@@ -44,45 +44,44 @@ const ProjectModal = memo(function ProjectModal({ project, onClose }) {
               className="absolute inset-0 w-full h-full object-cover"
             />
           ) : (
-            <span className="material-symbols-outlined text-8xl text-primary/60">{project.icon}</span>
+            <span className="material-symbols-outlined text-8xl text-ink/40">{project.icon}</span>
           )}
-          <div className="absolute inset-0 bg-black/30" aria-hidden />
 
           <button
             type="button"
             onClick={onClose}
             aria-label={t('common.close')}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md hover:bg-black/80 text-white flex items-center justify-center transition-colors border border-white/10"
+            className="btn-ink absolute right-4 top-4 grid size-10 place-items-center bg-paper text-ink"
           >
             <span className="material-symbols-outlined">close</span>
           </button>
 
           <div className="absolute top-4 left-4 flex gap-2">
-            <div className={`${categoryStyles[project.categoryColor] || categoryStyles.primary} backdrop-blur-md text-xs font-bold px-3 py-1 rounded-full border`}>
+            <div className="rounded-full border-2 border-ink bg-pgreen/70 px-3 py-1 font-mono text-xs font-bold">
               {project.category}
             </div>
-            <div className="bg-black/60 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/10">
+            <div className="rounded-full border-2 border-ink bg-paper px-3 py-1 font-mono text-xs font-bold">
               {project.year}
             </div>
           </div>
         </div>
 
-        <div className="p-8 space-y-6">
+        <div className="space-y-6 p-8">
           <div>
-            <h2 className="text-white text-3xl font-bold mb-2">{project.title}</h2>
+            <h2 className="hand-title mb-2 text-5xl">{project.title}</h2>
             <div className="flex flex-wrap gap-2">
               {project.technologies.map((tech) => (
-                <span key={tech} className="text-xs text-primary bg-primary/10 px-3 py-1 rounded-full">{tech}</span>
+                <span key={tech} className="rounded-full border-2 border-ink bg-pgreen/30 px-3 py-1 font-mono text-xs font-bold">{tech}</span>
               ))}
             </div>
           </div>
 
           <div>
-            <h3 className="text-white text-lg font-bold mb-3 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary">description</span>
+            <h3 className="mb-3 flex items-center gap-2 font-mono text-sm font-bold uppercase tracking-widest">
+              <span className="material-symbols-outlined">description</span>
               {t('common.description')}
             </h3>
-            <p className="text-gray-300 text-base leading-relaxed whitespace-pre-line">
+            <p className="whitespace-pre-line text-base leading-relaxed text-ink/80">
               {project.description[lang]}
             </p>
           </div>
@@ -93,7 +92,7 @@ const ProjectModal = memo(function ProjectModal({ project, onClose }) {
                 href={project.demoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 min-w-[200px] h-12 rounded-full bg-primary hover:bg-[#1fd665] text-background-dark text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                className="btn-ink flex h-12 min-w-[200px] flex-1 items-center justify-center gap-2 bg-ink text-sm font-bold text-paper"
               >
                 <span className="material-symbols-outlined text-[20px]">play_arrow</span>
                 {t('projects.viewDemo')}
@@ -104,7 +103,7 @@ const ProjectModal = memo(function ProjectModal({ project, onClose }) {
                 href={project.downloadUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 min-w-[200px] h-12 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                className="btn-ink flex h-12 min-w-[200px] flex-1 items-center justify-center gap-2 bg-paper text-sm font-bold text-ink"
               >
                 <span className="material-symbols-outlined text-[20px]">download</span>
                 {t('projects.download')}
@@ -115,7 +114,7 @@ const ProjectModal = memo(function ProjectModal({ project, onClose }) {
                 href={project.repoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 min-w-[200px] h-12 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                className="btn-ink flex h-12 min-w-[200px] flex-1 items-center justify-center gap-2 bg-paper text-sm font-bold text-ink"
               >
                 <span className="material-symbols-outlined text-[20px]">code</span>
                 {t('projects.viewCode')}

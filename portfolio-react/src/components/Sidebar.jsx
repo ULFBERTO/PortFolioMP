@@ -7,64 +7,51 @@ function Sidebar({ data }) {
   const { profile, sidebar } = data;
 
   return (
-    <aside className="w-80 h-full bg-surface-dark/50 border-r border-white/5 flex flex-col justify-between p-6 shrink-0 hidden lg:flex overflow-y-auto">
-      <div className="flex flex-col gap-8">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4">
-            <div className="bg-gradient-to-br from-primary to-emerald-600 rounded-full size-12 ring-2 ring-primary/30 flex items-center justify-center text-background-dark font-bold text-lg">
-              {profile.initials}
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-white text-base font-bold leading-normal">{profile.shortName}</h1>
-              <p className="text-primary/80 text-xs font-medium uppercase tracking-wider">{profile.role[lang]}</p>
-            </div>
+    <aside className="hidden h-full w-80 shrink-0 flex-col justify-between gap-6 overflow-y-auto border-r-[3px] border-ink bg-paper p-6 lg:flex">
+      <div className="flex flex-col gap-7">
+        <div className="ink-card-flat flex items-center gap-3 p-3">
+          <div className="grid size-12 place-items-center rounded-full border-2 border-ink bg-pgreen font-hand text-2xl font-bold">
+            {profile.initials}
+          </div>
+          <div>
+            <h1 className="hand-title text-2xl leading-none">{profile.shortName}</h1>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink/60">{profile.role[lang]}</p>
           </div>
         </div>
 
         <nav className="flex flex-col gap-2" aria-label="Principal">
           {NAVIGATION.map((item, index) => (
-            <NavLink
-              key={item.id}
-              href={item.href}
-              icon={item.icon}
-              label={t(item.i18nKey)}
-              active={index === 0}
-            />
+            <NavLink key={item.id} href={item.href} icon={item.icon} label={t(item.i18nKey)} active={index === 0} />
           ))}
         </nav>
+
+        <div className="sticky -rotate-1 border-2 border-ink bg-[#fff6d9] p-3 shadow-[3px_4px_0_#1e1630]">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-ink/60">{sidebar.availability[lang]}</p>
+          <p className="hand-title text-xl leading-tight">● {sidebar.openToWork[lang]}</p>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between bg-white/5 rounded-full p-1" role="group" aria-label="Idioma">
-          {(['es', 'en']).map((lng) => (
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between rounded-full border-2 border-ink bg-white/60 p-1" role="group" aria-label="Idioma">
+          {['es', 'en'].map((lng) => (
             <button
               key={lng}
               type="button"
               onClick={() => setLang(lng)}
               aria-pressed={lang === lng}
-              className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all ${lang === lng ? 'bg-primary text-background-dark' : 'text-gray-400 hover:text-white'}`}
+              className={`flex-1 rounded-full px-4 py-2 font-mono text-sm font-bold transition-all ${
+                lang === lng ? 'bg-ink text-paper' : 'text-ink/60 hover:text-ink'
+              }`}
             >
               {lng.toUpperCase()}
             </button>
           ))}
         </div>
-
-        <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-          <p className="text-gray-400 text-xs mb-2">{sidebar.availability[lang]}</p>
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-primary" />
-            </span>
-            <span className="text-white text-sm font-medium">{sidebar.openToWork[lang]}</span>
-          </div>
-        </div>
-
         <a
           href={profile.cvUrl || '#'}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full h-12 px-4 bg-primary text-background-dark text-sm font-bold leading-normal tracking-wide hover:bg-[#1fd665] transition-colors glow-effect"
+          className="btn-ink flex h-12 w-full items-center justify-center gap-2 bg-ink px-4 text-sm font-bold text-paper"
         >
           <span className="material-symbols-outlined text-[20px]">download</span>
           <span className="truncate">{sidebar.downloadCV[lang]}</span>
@@ -79,10 +66,15 @@ const NavLink = memo(function NavLink({ href, icon, label, active }) {
     <a
       href={href}
       aria-current={active ? 'page' : undefined}
-      className={`flex items-center gap-3 px-4 py-3 rounded-full transition-colors ${active ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
+      className={`flex items-center gap-3 border-2 px-4 py-2.5 font-mono text-sm transition-all ${
+        active
+          ? 'rotate-[-0.5deg] border-ink bg-pgreen/40 font-bold shadow-[3px_3px_0_#1e1630]'
+          : 'border-transparent text-ink/60 hover:rotate-[0.4deg] hover:border-ink hover:bg-white/60 hover:text-ink'
+      }`}
+      style={{ borderRadius: '225px 15px 255px 15px / 15px 255px 15px 225px' }}
     >
       <span className="material-symbols-outlined" aria-hidden>{icon}</span>
-      <p className={`text-sm ${active ? 'font-bold' : 'font-medium'} leading-normal`}>{label}</p>
+      <span>{label}</span>
     </a>
   );
 });

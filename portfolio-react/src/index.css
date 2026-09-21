@@ -2,74 +2,114 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== Hand-drawn theme (look ink / paperInk de peticion.html) ===== */
+:root {
+  --paper: #f3e6cf;
+  --ink: #1e1630;
+  --green: #5cff5c;
+}
+
 body {
   font-family: "Spline Sans", sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  /* grain sutil tipo stock de papel */
+  background-image: radial-gradient(rgba(30, 22, 48, 0.055) 1px, transparent 1px);
+  background-size: 5px 5px;
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Papel: tarjeta principal con borde wobble (el outline nunca coincide con el fill) */
+.ink-card {
+  background: #fffdf7;
+  border: 2.5px solid var(--ink);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  box-shadow: 4px 5px 0 rgba(30, 22, 48, 0.9);
+}
+.ink-card-flat {
+  background: #fffdf7;
+  border: 2px solid var(--ink);
+  border-radius: 15px 225px 15px 255px / 255px 15px 225px 15px;
+  box-shadow: 3px 4px 0 rgba(30, 22, 48, 0.85);
 }
 
-::-webkit-scrollbar-track {
-  background: #102217;
+/* Cinta adhesiva de papel */
+.tape::before,
+.tape::after {
+  content: "";
+  position: absolute;
+  width: 92px;
+  height: 24px;
+  background: rgba(233, 213, 179, 0.9);
+  border: 1px solid rgba(30, 22, 48, 0.25);
+  top: -13px;
+  transform: rotate(-6deg);
+  z-index: 2;
+}
+.tape::before { left: 24px; }
+.tape::after { right: 24px; transform: rotate(5deg); }
+
+/* Título manuscrito con subrayado garabateado */
+.hand-title {
+  font-family: Caveat, "Bradley Hand", cursive;
+}
+.hand-underline {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='9' viewBox='0 0 120 9'%3E%3Cpath d='M2 6 Q 20 2 40 5 T 78 5 T 118 4' fill='none' stroke='%235cff5c' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 0.35em;
+  padding-bottom: 0.12em;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #234832;
-  border-radius: 4px;
+/* Sticky note */
+.sticky {
+  background: #fff6d9;
+  border: 2px solid var(--ink);
+  border-radius: 4px 4px 22px 4px;
+  box-shadow: 3px 4px 0 rgba(30, 22, 48, 0.85);
+  transform: rotate(-0.6deg);
+}
+.sticky:nth-child(even) { transform: rotate(0.7deg); }
+
+/* Blueprint (mundo noche, como escena inferencia) */
+.blueprint {
+  background: #0b0d1f;
+  color: #e8ecff;
+  background-image: radial-gradient(rgba(232, 236, 255, 0.14) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.blueprint .ink-card,
+.blueprint .ink-card-flat {
+  background: transparent;
+  border-color: #e8ecff;
+  box-shadow: 3px 4px 0 rgba(232, 236, 255, 0.35);
+  color: #e8ecff;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #2bee79;
+/* Botones */
+.btn-ink {
+  border: 2.5px solid var(--ink);
+  border-radius: 225px 15px 255px 15px / 15px 255px 15px 225px;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
+.btn-ink:hover { transform: translate(-1px, -1px); box-shadow: 4px 5px 0 var(--ink); }
+.btn-ink:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
 
-.project-card {
-  transition: all 0.3s ease;
-}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #e9d5b3; }
+::-webkit-scrollbar-thumb { background: #1e1630; border-radius: 8px; border: 2px solid #e9d5b3; }
 
-.project-card:hover {
-  transform: translateY(-4px);
-}
+.project-card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+.project-card:hover { transform: translateY(-4px) rotate(-0.3deg); }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.float-animation { animation: float 5s ease-in-out infinite; }
 
-.float-animation {
-  animation: float 6s ease-in-out infinite;
-}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.96) rotate(-0.5deg); } to { opacity: 1; transform: scale(1); } }
+.animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+.animate-scaleIn { animation: scaleIn 0.28s ease-out; }
 
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(43, 238, 121, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(43, 238, 121, 0.5); }
-}
-
-.glow-effect:hover {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes scaleIn {
-  from { 
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to { 
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.2s ease-out;
-}
-
-.animate-scaleIn {
-  animation: scaleIn 0.3s ease-out;
+@media (prefers-reduced-motion: reduce) {
+  .float-animation, .animate-fadeIn, .animate-scaleIn { animation: none; }
 }

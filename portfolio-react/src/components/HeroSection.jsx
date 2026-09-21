@@ -1,51 +1,58 @@
-import { memo, useMemo } from 'react';
+import { Suspense, lazy, memo, useMemo } from 'react';
 import { useLanguage } from '@/context/LanguageContext.jsx';
+
+const PacketField = lazy(() => import('@/shared/components/canvas/PacketField.jsx'));
 
 function HeroSection({ data }) {
   const { lang } = useLanguage();
   const { profile, hero } = data;
-  const firstName = useMemo(
-    () => profile.name.split(' ').slice(0, 2).join(' '),
-    [profile.name],
-  );
+  const firstName = useMemo(() => profile.name.split(' ').slice(0, 2).join(' '), [profile.name]);
 
   return (
-    <section id="dashboard" className="flex flex-col gap-6 rounded-3xl bg-surface-dark p-6 md:p-10 border border-white/5 relative overflow-hidden">
-      <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none float-animation" aria-hidden />
-      <div className="absolute -left-10 -bottom-10 w-48 h-48 bg-primary/3 rounded-full blur-2xl pointer-events-none" aria-hidden />
-
-      <div className="flex flex-col md:flex-row gap-8 items-start md:items-center justify-between relative z-10">
-        <div className="flex flex-col gap-4 max-w-2xl">
-          <h2 className="text-primary font-medium tracking-wide text-sm uppercase">Portfolio Dashboard v2.0</h2>
-          <h1 className="text-white text-3xl md:text-5xl font-bold leading-tight tracking-tight">
-            {hero.greeting[lang]}{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
-              {firstName}.
-            </span>
-          </h1>
-          <p className="text-gray-400 text-lg leading-relaxed max-w-xl">
-            {hero.description[lang]}
-          </p>
+    <section id="dashboard" className="ink-card tape relative overflow-hidden p-0">
+      {/* Canvas procedural interactivo */}
+      <div className="relative h-[340px] md:h-[380px]">
+        <Suspense fallback={<div className="absolute inset-0 bg-paper" />}>
+          <PacketField density={8} />
+        </Suspense>
+        <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2">
+          <span className="rounded-full border-2 border-ink bg-paper px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-widest">
+            Portfolio · v3 hand-drawn
+          </span>
         </div>
+      </div>
+
+      <div className="relative z-10 flex flex-col gap-5 p-6 md:p-10">
+        <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-ink/60">
+          {'// una petición entra al servidor… y sale hecha portafolio'}
+        </p>
+        <h1 className="hand-title text-5xl leading-[0.95] md:text-7xl">
+          {hero.greeting[lang]}{' '}
+          <span className="hand-underline">{firstName}.</span>
+        </h1>
+        <p className="max-w-xl text-[15px] leading-relaxed text-ink/80">{hero.description[lang]}</p>
         <div className="flex flex-wrap gap-3">
-          <SocialLink href={profile.github} label="GitHub" />
-          <SocialLink href={profile.linkedin} label="LinkedIn" />
+          <SocialLink href={profile.github} label="GitHub" icon="arrow_outward" primary />
+          <SocialLink href={profile.linkedin} label="LinkedIn" icon="arrow_outward" />
+          {profile.cvUrl ? <SocialLink href={profile.cvUrl} label="CV" icon="download" /> : null}
         </div>
       </div>
     </section>
   );
 }
 
-const SocialLink = memo(function SocialLink({ href, label }) {
+const SocialLink = memo(function SocialLink({ href, label, icon, primary }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-2 h-12 px-6 rounded-full bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all group"
+      className={`btn-ink flex items-center gap-2 px-5 py-2.5 font-mono text-sm font-bold ${
+        primary ? 'bg-ink text-paper' : 'bg-paper text-ink'
+      }`}
     >
-      <span className="truncate">{label}</span>
-      <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform" aria-hidden>arrow_outward</span>
+      <span>{label}</span>
+      <span className="material-symbols-outlined text-[18px]" aria-hidden>{icon}</span>
     </a>
   );
 });

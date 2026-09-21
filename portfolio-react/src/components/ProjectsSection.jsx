@@ -1,32 +1,24 @@
 import { Suspense, lazy, memo, useCallback, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext.jsx';
 import { LazyImage } from '@/shared/components/ui/index.js';
-import { categoryStyles } from './projectStyles.js';
+import { SectionHead, TechTag } from '@/shared/components/ui/Ink.jsx';
 
 const ProjectModal = lazy(() => import('./ProjectModal.jsx'));
 
 function ProjectsSection({ projects }) {
   const { t } = useLanguage();
   const [selectedProject, setSelectedProject] = useState(null);
-
   const handleSelect = useCallback((project) => setSelectedProject(project), []);
   const handleClose = useCallback(() => setSelectedProject(null), []);
 
   return (
-    <section id="projects" className="xl:col-span-2 flex flex-col gap-6" aria-label={t('projects.title')}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary" aria-hidden>view_kanban</span>
-          <h2 className="text-white text-xl font-bold">{t('projects.title')}</h2>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {projects.map((project) => (
-          <ProjectCard key={project.id} project={project} onClick={() => handleSelect(project)} />
+    <section id="projects" className="flex flex-col gap-5 xl:col-span-2" aria-label={t('projects.title')}>
+      <SectionHead kicker="// réplica x2 x4 x8" title={t('projects.title')} icon="view_kanban" />
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        {projects.map((project, i) => (
+          <ProjectCard key={project.id} project={project} index={i} onClick={() => handleSelect(project)} />
         ))}
       </div>
-
       {selectedProject && (
         <Suspense fallback={null}>
           <ProjectModal project={selectedProject} onClose={handleClose} />
@@ -36,85 +28,58 @@ function ProjectsSection({ projects }) {
   );
 }
 
-const ProjectCard = memo(function ProjectCard({ project, onClick }) {
+const ProjectCard = memo(function ProjectCard({ project, index, onClick }) {
   const { lang } = useLanguage();
-
   return (
     <article
       onClick={onClick}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick?.();
-        }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(); }
       }}
       tabIndex={0}
       role="button"
       aria-label={project.title}
-      className="project-card group flex flex-col bg-surface-dark rounded-3xl overflow-hidden border border-white/5 hover:border-primary/50 hover:shadow-[0_0_30px_rgba(43,238,121,0.1)] cursor-pointer transition-all"
+      className="project-card group relative flex cursor-pointer flex-col overflow-hidden bg-[#fffdf7]"
+      style={{
+        border: '2.5px solid #1e1630',
+        borderRadius: index % 2 ? '15px 225px 15px 255px / 255px 15px 225px 15px' : '255px 15px 225px 15px / 15px 225px 15px 255px',
+        boxShadow: '4px 5px 0 #1e1630',
+      }}
     >
-      <div className={`h-48 w-full bg-gradient-to-br ${project.gradient} relative flex items-center justify-center overflow-hidden`}>
+      <span className="absolute -top-2 left-8 z-10 rotate-[-4deg] border border-ink/30 bg-paperdeep px-2 font-mono text-[10px] font-bold uppercase tracking-widest">
+        seed {100 + index * 17}
+      </span>
+      <div className="relative flex h-44 w-full items-center justify-center overflow-hidden border-b-[2.5px] border-ink bg-paper">
         {project.imageUrl ? (
-          <LazyImage
-            src={project.imageUrl}
-            alt={project.title}
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
+          <LazyImage src={project.imageUrl} alt={project.title} className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
         ) : (
-          <span className="material-symbols-outlined text-6xl text-primary/60 group-hover:text-primary transition-colors">{project.icon}</span>
+          <span className="material-symbols-outlined text-6xl text-ink/40 transition-colors group-hover:text-ink" aria-hidden>{project.icon}</span>
         )}
-        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all" aria-hidden />
-        <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/10">
-          {project.year}
-        </div>
-        <div className={`${categoryStyles[project.categoryColor] || categoryStyles.primary} absolute top-4 left-4 backdrop-blur-md text-xs font-bold px-3 py-1 rounded-full border`}>
-          {project.category}
-        </div>
+        <div className="absolute left-3 top-3 rounded-full border-2 border-ink bg-pgreen/70 px-3 py-0.5 font-mono text-[11px] font-bold">{project.category}</div>
+        <div className="absolute right-3 top-3 rounded-full border-2 border-ink bg-paper px-3 py-0.5 font-mono text-[11px] font-bold">{project.year}</div>
       </div>
-      <div className="flex flex-col p-6 gap-4 flex-1">
-        <div>
-          <h3 className="text-white text-lg font-bold group-hover:text-primary transition-colors">{project.title}</h3>
-          <p className="text-gray-400 text-sm mt-2 line-clamp-3">{project.description[lang]}</p>
+      <div className="flex flex-1 flex-col gap-3 p-5">
+        <h3 className="hand-title text-3xl leading-none">{project.title}</h3>
+        <p className="line-clamp-3 text-sm leading-relaxed text-ink/70">{project.description[lang]}</p>
+        <div className="mt-auto flex flex-wrap gap-1.5">
+          {project.technologies.map((tech) => (<TechTag key={tech} label={tech} />))}
         </div>
-        <div className="flex flex-wrap gap-2 mt-auto">
-          {project.technologies.map((tech) => (
-            <span key={tech} className="text-xs text-primary bg-primary/10 px-2 py-1 rounded">{tech}</span>
-          ))}
-        </div>
-        <div className="flex gap-3 mt-2">
+        <div className="mt-1 flex gap-2">
           {project.demoUrl && (
-            <a
-              href={project.demoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="flex-1 h-10 rounded-full bg-primary/20 hover:bg-primary/30 text-primary text-xs font-bold transition-colors flex items-center justify-center gap-1"
-            >
-              <span className="material-symbols-outlined text-[16px]">play_arrow</span>
-              Demo
+            <a href={project.demoUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
+              className="btn-ink flex h-9 flex-1 items-center justify-center gap-1 bg-ink text-xs font-bold text-paper">
+              <span className="material-symbols-outlined text-[16px]">play_arrow</span>Demo
             </a>
           )}
           {project.downloadUrl && (
-            <a
-              href={project.downloadUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="flex-1 h-10 rounded-full bg-white/5 hover:bg-white/10 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1"
-            >
-              <span className="material-symbols-outlined text-[16px]">download</span>
-              <span>{lang === 'es' ? 'Descargar' : 'Download'}</span>
+            <a href={project.downloadUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
+              className="btn-ink flex h-9 flex-1 items-center justify-center gap-1 bg-paper text-xs font-bold text-ink">
+              <span className="material-symbols-outlined text-[16px]">download</span>{lang === 'es' ? 'Descargar' : 'Download'}
             </a>
           )}
           {project.repoUrl && (
-            <a
-              href={project.repoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              aria-label="Github Repo"
-              className="h-10 w-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors"
-            >
+            <a href={project.repoUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} aria-label="Github Repo"
+              className="btn-ink grid h-9 w-10 place-items-center bg-paper text-ink">
               <span className="material-symbols-outlined text-[18px]">code</span>
             </a>
           )}
