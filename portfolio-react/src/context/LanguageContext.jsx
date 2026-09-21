@@ -1,45 +1,27 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const LanguageContext = createContext()
 
-const staticTranslations = {
-  es: {
-    "nav.dashboard": "Dashboard",
-    "nav.projects": "Proyectos",
-    "nav.experience": "Experiencia",
-    "nav.contact": "Contacto",
-    "experience.title": "Línea de Experiencia",
-    "projects.title": "Proyectos Destacados",
-    "tech.title": "Tecnologías Principales",
-    "contact.sendEmail": "Enviar Email"
-  },
-  en: {
-    "nav.dashboard": "Dashboard",
-    "nav.projects": "Projects",
-    "nav.experience": "Experience",
-    "nav.contact": "Contact",
-    "experience.title": "Experience Timeline",
-    "projects.title": "Featured Projects",
-    "tech.title": "Core Technologies",
-    "contact.sendEmail": "Send Email"
-  }
-}
-
 export function LanguageProvider({ children }) {
-  const [lang, setLang] = useState(() => localStorage.getItem('portfolio-lang') || 'es')
+  const { t, i18n } = useTranslation()
+  const lang = i18n.language?.startsWith('en') ? 'en' : 'es'
 
-  useEffect(() => {
-    localStorage.setItem('portfolio-lang', lang)
-    document.documentElement.lang = lang
-  }, [lang])
-
-  const t = (key) => staticTranslations[lang]?.[key] || key
+  const setLang = (newLang) => {
+    i18n.changeLanguage(newLang)
+  }
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t }}>
+    <LanguageContext.Provider value={{ lang, setLang, t, i18n }}>
       {children}
     </LanguageContext.Provider>
   )
 }
 
-export const useLanguage = () => useContext(LanguageContext)
+export const useLanguage = () => {
+  const context = useContext(LanguageContext)
+  if (!context) {
+    throw new Error('useLanguage must be used within a LanguageProvider')
+  }
+  return context
+}

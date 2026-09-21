@@ -11,15 +11,46 @@ import Footer from './components/Footer'
 import AdminPanel from './components/AdminPanel'
 import CookieConsent from './components/CookieConsent'
 
-function Portfolio() {
-  const { data, isAdmin, logout, loading } = useData()
+import { useLanguage } from './context/LanguageContext'
 
-  if (loading || !data) {
+function Portfolio() {
+  const { data, isAdmin, logout, loading, error, refetch } = useData()
+  const { t } = useLanguage()
+
+  if (loading) {
     return (
       <div className="bg-background-dark text-white h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-400">Cargando...</p>
+          <p className="text-gray-400">{t('common.loading')}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <div className="bg-background-dark text-white h-screen flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-surface-dark border border-red-500/20 rounded-3xl p-8 flex flex-col items-center text-center gap-4 shadow-2xl">
+          <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400">
+            <span className="material-symbols-outlined text-3xl">cloud_off</span>
+          </div>
+          <h2 className="text-white text-xl font-bold">{t('common.errorTitle')}</h2>
+          <p className="text-gray-400 text-sm leading-relaxed">
+            {t('common.errorConnectionDesc')}
+          </p>
+          {error && (
+            <p className="text-xs text-red-400 font-mono bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20 max-w-full truncate">
+              {error}
+            </p>
+          )}
+          <button
+            onClick={refetch}
+            className="mt-2 px-6 py-2.5 rounded-full bg-primary hover:bg-[#1fd665] text-background-dark font-bold text-sm transition-colors flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-[18px]">refresh</span>
+            <span>{t('common.retry')}</span>
+          </button>
         </div>
       </div>
     )
@@ -60,10 +91,10 @@ function Portfolio() {
 
 export default function App() {
   return (
-    <DataProvider>
-      <LanguageProvider>
+    <LanguageProvider>
+      <DataProvider>
         <Portfolio />
-      </LanguageProvider>
-    </DataProvider>
+      </DataProvider>
+    </LanguageProvider>
   )
 }

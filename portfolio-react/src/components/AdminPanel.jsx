@@ -45,9 +45,9 @@ export default function AdminPanel({ onClose }) {
             </div>
           </div>
           <div className="flex gap-3">
-            <button onClick={() => { handleSave(); downloadData(); }} className="flex items-center gap-2 px-4 py-2 bg-primary text-background-dark rounded-lg font-bold text-sm hover:bg-[#1fd665] transition-colors">
-              <span className="material-symbols-outlined text-[18px]">download</span>
-              Guardar JSON
+            <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2 bg-primary text-background-dark rounded-lg font-bold text-sm hover:bg-[#1fd665] transition-colors" title="Guardar directamente en PostgreSQL a través del backend Go">
+              <span className="material-symbols-outlined text-[18px]">cloud_upload</span>
+              Guardar en Backend
             </button>
             <button 
               onClick={onClose} 

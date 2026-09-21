@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLanguage } from '../context/LanguageContext'
 
 export default function CookieConsent() {
-  const { lang } = useLanguage()
+  const { t } = useLanguage()
   const [visible, setVisible] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
   const [consentStatus, setConsentStatus] = useState(null)
@@ -45,8 +45,6 @@ export default function CookieConsent() {
 
   if (!visible) return null
 
-  const isEs = lang === 'es'
-
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 p-4 sm:p-6 flex justify-center pointer-events-none animate-in fade-in slide-in-from-bottom-5 duration-300">
       <div className="w-full max-w-2xl bg-surface-dark/95 dark:bg-[#13271c]/95 backdrop-blur-xl border border-primary/20 rounded-2xl shadow-2xl p-5 sm:p-6 text-white pointer-events-auto transition-all">
@@ -66,7 +64,7 @@ export default function CookieConsent() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
               <h3 className="font-semibold text-base sm:text-lg text-white">
-                {isEs ? 'Configuración de Privacidad y Cookies' : 'Privacy & Cookie Preferences'}
+                {t('cookies.title')}
               </h3>
               {consentStatus && (
                 <span className={`text-xs px-2 py-0.5 rounded-full border ${
@@ -75,16 +73,14 @@ export default function CookieConsent() {
                     : 'border-yellow-500/40 text-yellow-400 bg-yellow-500/10'
                 }`}>
                   {consentStatus === 'accepted' 
-                    ? (isEs ? 'Aceptadas' : 'Accepted') 
-                    : (isEs ? 'Rechazadas' : 'Declined')}
+                    ? t('cookies.accepted') 
+                    : t('cookies.declined')}
                 </span>
               )}
             </div>
 
             <p className="text-gray-300 text-xs sm:text-sm mt-1.5 leading-relaxed">
-              {isEs
-                ? 'Este sitio utiliza cookies y almacenamiento local estrictamente necesarios para la seguridad del panel de administración, control de peticiones en Redis y preferencias de visualización.'
-                : 'This site uses strictly necessary cookies and local storage for admin security, Redis-backed rate limiting, and viewing preferences.'}
+              {t('cookies.summary')}
             </p>
 
             {/* Expandable Details */}
@@ -94,33 +90,27 @@ export default function CookieConsent() {
                   <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
                   <div>
                     <span className="text-gray-200 font-medium">
-                      {isEs ? 'Cookies Esenciales / Seguridad:' : 'Essential / Security Cookies:'}
+                      {t('cookies.essentialTitle')}
                     </span>{' '}
-                    {isEs
-                      ? 'Token de sesión cifrado (HttpOnly, Secure) utilizado únicamente para validar el acceso administrativo y proteger contra ataques de fuerza bruta en Redis.'
-                      : 'Encrypted session token (HttpOnly, Secure) used only to validate admin access and protect against brute-force in Redis.'}
+                    {t('cookies.essentialDesc')}
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
                   <div>
                     <span className="text-gray-200 font-medium">
-                      {isEs ? 'Preferencias Locales:' : 'Local Preferences:'}
+                      {t('cookies.prefTitle')}
                     </span>{' '}
-                    {isEs
-                      ? 'Guardado de idioma seleccionado (Español/Inglés) en el navegador para no solicitarlo en cada visita.'
-                      : 'Saves your language preference (ES/EN) in the browser so you don’t need to set it every visit.'}
+                    {t('cookies.prefDesc')}
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-gray-500 mt-1.5 flex-shrink-0" />
                   <div>
                     <span className="text-gray-200 font-medium">
-                      {isEs ? 'Cookies de Terceros / Rastreo:' : 'Third-Party / Tracking Cookies:'}
+                      {t('cookies.thirdPartyTitle')}
                     </span>{' '}
-                    {isEs
-                      ? 'No utilizamos cookies de publicidad, rastreo ni venta de datos.'
-                      : 'We do not use advertising, tracking, or data-selling cookies.'}
+                    {t('cookies.thirdPartyDesc')}
                   </div>
                 </div>
               </div>
@@ -134,8 +124,8 @@ export default function CookieConsent() {
                 className="text-xs text-gray-400 hover:text-primary transition-colors underline underline-offset-4 focus:outline-none"
               >
                 {showDetails
-                  ? (isEs ? 'Ocultar detalles' : 'Hide details')
-                  : (isEs ? 'Ver detalles de cookies' : 'View cookie details')}
+                  ? t('cookies.detailsHide')
+                  : t('cookies.detailsShow')}
               </button>
 
               <div className="flex items-center gap-2.5 ml-auto">
@@ -144,14 +134,14 @@ export default function CookieConsent() {
                   onClick={handleDecline}
                   className="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-200 focus:outline-none"
                 >
-                  {isEs ? 'Rechazar' : 'Decline'}
+                  {t('cookies.decline')}
                 </button>
                 <button
                   type="button"
                   onClick={handleAccept}
                   className="px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-black bg-primary hover:bg-emerald-400 shadow-lg shadow-primary/20 transition-all duration-200 focus:outline-none hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  {isEs ? 'Aceptar Todas' : 'Accept All'}
+                  {t('cookies.accept')}
                 </button>
               </div>
             </div>

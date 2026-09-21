@@ -1,0 +1,62 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "experience": "Experience",
+    "contact": "Contact"
+  },
+  "common": {
+    "sendEmail": "Send Email",
+    "downloadCV": "Download CV",
+    "description": "Description",
+    "viewDemo": "View Demo",
+    "download": "Download",
+    "viewCode": "View Code",
+    "close": "Close",
+    "save": "Save",
+    "cancel": "Cancel",
+    "openToWork": "Open to work",
+    "availability": "Availability",
+    "loading": "Loading portfolio...",
+    "retry": "Retry connection",
+    "errorTitle": "Error loading data",
+    "errorConnectionDesc": "Unable to connect to the backend server. Please make sure the Go backend is running."
+  },
+  "experience": {
+    "title": "Experience Timeline"
+  },
+  "tech": {
+    "title": "Core Technologies"
+  },
+  "projects": {
+    "title": "Featured Projects",
+    "viewDemo": "View Demo",
+    "download": "Download",
+    "viewCode": "View Code"
+  },
+  "footer": {
+    "cookiePreferences": "Cookie Preferences"
+  },
+  "cookies": {
+    "title": "Privacy & Cookie Preferences",
+    "accepted": "Accepted",
+    "declined": "Declined",
+    "summary": "This site uses strictly necessary cookies and local storage for admin security, Redis-backed rate limiting, and viewing preferences.",
+    "essentialTitle": "Essential / Security Cookies:",
+    "essentialDesc": "Encrypted session token (HttpOnly, Secure) used only to validate admin access and protect against brute-force in Redis.",
+    "prefTitle": "Local Preferences:",
+    "prefDesc": "Saves your language preference (ES/EN) in the browser so you don’t need to set it every visit.",
+    "thirdPartyTitle": "Third-Party / Tracking Cookies:",
+    "thirdPartyDesc": "No third-party cookies, tracking pixels, or external ad tools are used.",
+    "detailsShow": "View technical details",
+    "detailsHide": "Hide details",
+    "decline": "Essential only",
+    "accept": "Accept & continue"
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "subtitle": "Edit your full portfolio content",
+    "save": "Save to Backend",
+    "logout": "Log Out"
+  }
+}

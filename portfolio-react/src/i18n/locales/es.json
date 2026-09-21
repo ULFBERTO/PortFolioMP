@@ -1,0 +1,62 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "projects": "Proyectos",
+    "experience": "Experiencia",
+    "contact": "Contacto"
+  },
+  "common": {
+    "sendEmail": "Enviar Email",
+    "downloadCV": "Descargar CV",
+    "description": "Descripción",
+    "viewDemo": "Ver Demo",
+    "download": "Descargar",
+    "viewCode": "Ver Código",
+    "close": "Cerrar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "openToWork": "Disponible para trabajar",
+    "availability": "Disponibilidad",
+    "loading": "Cargando portafolio...",
+    "retry": "Reintentar conexión",
+    "errorTitle": "Error al cargar los datos",
+    "errorConnectionDesc": "No fue posible conectar con el servidor backend. Por favor, asegúrate de que el backend de Go esté iniciado."
+  },
+  "experience": {
+    "title": "Línea de Experiencia"
+  },
+  "tech": {
+    "title": "Tecnologías Principales"
+  },
+  "projects": {
+    "title": "Proyectos Destacados",
+    "viewDemo": "Ver Demo",
+    "download": "Descargar",
+    "viewCode": "Ver Código"
+  },
+  "footer": {
+    "cookiePreferences": "Preferencias de Cookies"
+  },
+  "cookies": {
+    "title": "Configuración de Privacidad y Cookies",
+    "accepted": "Aceptadas",
+    "declined": "Rechazadas",
+    "summary": "Este sitio utiliza cookies y almacenamiento local estrictamente necesarios para la seguridad del panel de administración, control de peticiones en Redis y preferencias de visualización.",
+    "essentialTitle": "Cookies Esenciales / Seguridad:",
+    "essentialDesc": "Token de sesión cifrado (HttpOnly, Secure) utilizado únicamente para validar el acceso administrativo y proteger contra ataques de fuerza bruta en Redis.",
+    "prefTitle": "Preferencias Locales:",
+    "prefDesc": "Guardado de idioma seleccionado (Español/Inglés) en el navegador para no solicitarlo en cada visita.",
+    "thirdPartyTitle": "Cookies de Terceros / Rastreo:",
+    "thirdPartyDesc": "No se utilizan cookies de terceros, píxeles de seguimiento ni herramientas publicitarias externas.",
+    "detailsShow": "Ver detalles técnicos",
+    "detailsHide": "Ocultar detalles",
+    "decline": "Solo esenciales",
+    "accept": "Aceptar y continuar"
+  },
+  "admin": {
+    "title": "Panel de Administración",
+    "subtitle": "Edita todo el contenido de tu portafolio",
+    "save": "Guardar en Backend",
+    "logout": "Cerrar Sesión"
+  }
+}

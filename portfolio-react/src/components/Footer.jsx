@@ -1,7 +1,7 @@
 import { useLanguage } from '../context/LanguageContext'
 
 export default function Footer({ data }) {
-  const { lang } = useLanguage()
+  const { lang, t } = useLanguage()
   const { profile, footer } = data
 
   return (
@@ -22,7 +22,7 @@ export default function Footer({ data }) {
           onClick={() => window.dispatchEvent(new CustomEvent('open-cookie-settings'))}
           className="text-gray-400 hover:text-primary transition-colors text-sm underline underline-offset-4 focus:outline-none"
         >
-          {lang === 'es' ? 'Preferencias de Cookies' : 'Cookie Preferences'}
+          {t('footer.cookiePreferences')}
         </button>
       </div>
     </footer>

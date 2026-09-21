@@ -44,3 +44,12 @@ coverage/
 # Misc
 *.tgz
 .yarn-integrity
+
+# Go binaries and build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/bin/
+/pkg/

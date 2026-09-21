@@ -118,7 +118,7 @@ function ProjectCard({ project, onClick }) {
 }
 
 function ProjectModal({ project, onClose }) {
-  const { lang } = useLanguage()
+  const { lang, t } = useLanguage()
 
   return (
     <div 
@@ -177,7 +177,7 @@ function ProjectModal({ project, onClose }) {
           <div>
             <h3 className="text-white text-lg font-bold mb-3 flex items-center gap-2">
               <span className="material-symbols-outlined text-primary">description</span>
-              {lang === 'es' ? 'Descripción' : 'Description'}
+              {t('common.description')}
             </h3>
             <p className="text-gray-300 text-base leading-relaxed whitespace-pre-line">
               {project.description[lang]}
@@ -194,7 +194,7 @@ function ProjectModal({ project, onClose }) {
                 className="flex-1 min-w-[200px] h-12 rounded-full bg-primary hover:bg-[#1fd665] text-background-dark text-sm font-bold transition-colors flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-outlined text-[20px]">play_arrow</span>
-                {lang === 'es' ? 'Ver Demo' : 'View Demo'}
+                {t('projects.viewDemo')}
               </a>
             )}
             {project.downloadUrl && (
@@ -205,7 +205,7 @@ function ProjectModal({ project, onClose }) {
                 className="flex-1 min-w-[200px] h-12 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition-colors flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-outlined text-[20px]">download</span>
-                {lang === 'es' ? 'Descargar' : 'Download'}
+                {t('projects.download')}
               </a>
             )}
             {project.repoUrl && (
@@ -216,7 +216,7 @@ function ProjectModal({ project, onClose }) {
                 className="flex-1 min-w-[200px] h-12 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition-colors flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-outlined text-[20px]">code</span>
-                {lang === 'es' ? 'Ver Código' : 'View Code'}
+                {t('projects.viewCode')}
               </a>
             )}
           </div>

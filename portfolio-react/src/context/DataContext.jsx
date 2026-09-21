@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import fallbackData from '../data/portfolioData.json'
 
 const DataContext = createContext()
 
@@ -40,6 +39,7 @@ export function DataProvider({ children }) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [adminToken, setAdminToken] = useState(() => sessionStorage.getItem('admin_token') || null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   // Load data on mount
   useEffect(() => {
@@ -153,23 +153,26 @@ export function DataProvider({ children }) {
   }
 
   const fetchData = async () => {
+    setLoading(true)
+    setError(null)
     try {
       const response = await fetch(PORTFOLIO_ENDPOINT)
       if (response.ok) {
         const apiData = await response.json()
         if (apiData && apiData.profile) {
           setData(apiData)
+          setLoading(false)
           return
         }
       }
-    } catch (error) {
-      console.warn('Backend no disponible, usando datos de respaldo locales:', error.message)
+      throw new Error(`Error ${response.status}: ${response.statusText}`)
+    } catch (err) {
+      console.error('Error al conectar con el backend:', err.message)
+      setError(err.message || 'Error de conexión con el backend')
+      setData(null)
     } finally {
       setLoading(false)
     }
-
-    // Fallback if fetch fails or network is offline
-    setData(fallbackData)
   }
 
   const updateData = async (newData) => {
@@ -214,17 +217,18 @@ export function DataProvider({ children }) {
   }
 
   const downloadData = () => {
+    if (!data) return
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'portfolioData.json'
+    a.download = 'portfolio-export.json'
     a.click()
     URL.revokeObjectURL(url)
   }
 
   return (
-    <DataContext.Provider value={{ data, updateData, isAdmin, setIsAdmin, logout, downloadData, loading }}>
+    <DataContext.Provider value={{ data, updateData, isAdmin, setIsAdmin, logout, downloadData, loading, error, refetch: fetchData }}>
       {children}
     </DataContext.Provider>
   )
