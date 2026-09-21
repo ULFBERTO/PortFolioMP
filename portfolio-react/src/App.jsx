@@ -14,7 +14,8 @@ import { Spinner, ErrorState, SectionFallback, LazySection } from '@/shared/comp
 import { ErrorBoundary } from '@/shared/components/feedback/ErrorBoundary.jsx';
 
 const ExperienceSection = lazy(() => import('@/components/ExperienceSection.jsx'));
-const ProjectsSection = lazy(() => import('@/components/ProjectsSection.jsx'));
+const HexProjects = lazy(() => import('@/components/HexProjects.jsx'));
+const PlantGrove = lazy(() => import('@/shared/components/canvas/PlantGrove.jsx'));
 const ContactSection = lazy(() => import('@/components/ContactSection.jsx'));
 const Footer = lazy(() => import('@/components/Footer.jsx'));
 const AdminPanel = lazy(() => import('@/components/AdminPanel.jsx'));
@@ -68,11 +69,11 @@ function Portfolio() {
 
             <Suspense fallback={null}><DoodleDivider seed={3} /></Suspense>
 
-            {/* Proyectos primero y a ancho completo: el trabajo es la prueba */}
+            {/* Proyectos como panal hexagonal: cada celda se extruye al abrir */}
             <ErrorBoundary>
-              <LazySection minHeight={420}>
-                <Suspense fallback={<SectionFallback minHeight={420} />}>
-                  <ProjectsSection projects={data.projects} />
+              <LazySection minHeight={520}>
+                <Suspense fallback={<SectionFallback minHeight={520} />}>
+                  <HexProjects projects={data.projects} />
                 </Suspense>
               </LazySection>
             </ErrorBoundary>
@@ -94,6 +95,15 @@ function Portfolio() {
           </div>
 
           <div className="mx-auto flex max-w-[1400px] flex-col gap-7 p-4 pt-0 lg:p-10 lg:pt-0">
+            {/* Bosque procedural: seed aleatoria por visita */}
+            <ErrorBoundary>
+              <LazySection minHeight={300}>
+                <Suspense fallback={<SectionFallback minHeight={300} />}>
+                  <PlantGrove />
+                </Suspense>
+              </LazySection>
+            </ErrorBoundary>
+
             <ErrorBoundary>
               <LazySection minHeight={200}>
                 <Suspense fallback={<SectionFallback minHeight={200} />}>

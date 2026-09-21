@@ -236,6 +236,299 @@ export function speedLines(c, x, y, seed, n = 7, color = PAPER_PAL.ink) {
   c.restore();
 }
 
+/* ================= cpu.html / test.html: lattice, aster, plant, thread, electron ================= */
+
+export const ELEC = '#28f0e0'; // cyan del electrón (accents[1] de cpu.html)
+
+/** Esquinas de hexágono plano (flat-top), para extrusión y hit-test. */
+export function hexCorners(cx, cy, s) {
+  const pts = [];
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI / 3) * i + Math.PI / 6;
+    pts.push([cx + s * Math.cos(a), cy + s * Math.sin(a)]);
+  }
+  return pts;
+}
+
+/** Punto dentro de hexágono (test rápido por distancia + bordes). */
+export function pointInHex(px, py, cx, cy, s) {
+  const dx = Math.abs(px - cx);
+  const dy = Math.abs(py - cy);
+  if (dx > s || dy > s * 0.88) return false;
+  return s * 0.88 - dx * 0.5 >= dy * 0.5;
+}
+
+/** hexLattice: rejilla hexagonal de fondo (receta del core). */
+export function hexLattice(c, box, s, color, alpha = 0.3, width = 0.9, seed = 1) {
+  const r = rng(seed);
+  const [bx, by, bw, bh] = box;
+  const w = Math.sqrt(3) * s;
+  const h = 1.5 * s;
+  c.save();
+  c.strokeStyle = color;
+  c.globalAlpha = alpha;
+  c.lineWidth = width;
+  let row = 0;
+  for (let y = by - s; y < by + bh + s; y += h, row++) {
+    const off = row % 2 ? w / 2 : 0;
+    for (let x = bx - w + off; x < bx + bw + w; x += w) {
+      if (r() < 0.06) continue; // celdas perdidas: textura orgánica
+      hexPath(c, x, y, s * (0.92 + r() * 0.1));
+      c.stroke();
+    }
+  }
+  c.restore();
+}
+
+/** aster: núcleo con rayos (chispa de nacimiento, receta del core). */
+export function aster(c, x, y, r, n, color, seed, g = 1) {
+  if (g <= 0) return;
+  const rr = rng(seed);
+  c.save();
+  c.strokeStyle = color;
+  c.lineWidth = 1.4;
+  c.globalAlpha = 0.9 * Math.min(1, g);
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * TAU + (rr() - 0.5) * 0.3;
+    const r0 = r * 1.6;
+    const r1 = r * (2.6 + rr() * 1.6) * g;
+    c.beginPath();
+    c.moveTo(x + Math.cos(a) * r0, y + Math.sin(a) * r0);
+    c.lineTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1);
+    c.stroke();
+  }
+  c.globalAlpha = 1;
+  c.fillStyle = PAPER_PAL.paper;
+  c.beginPath();
+  c.arc(x, y, r, 0, TAU);
+  c.fill();
+  c.strokeStyle = color;
+  c.lineWidth = 1.6;
+  c.stroke();
+  c.restore();
+}
+
+export function dottedArc(c, cx, cy, r, color, seed, step = 9, size = 1.1) {
+  const rr = rng(seed);
+  c.save();
+  c.fillStyle = color;
+  const n = Math.round((TAU * r) / step);
+  for (let k = 0; k < n; k++) {
+    if (rr() < 0.12) continue;
+    const a = (k / n) * TAU;
+    c.beginPath();
+    c.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, size, 0, TAU);
+    c.fill();
+  }
+  c.restore();
+}
+
+export function dashedRing(c, cx, cy, r, color, seed, dash = [14, 10], width = 1.5, rot = 0) {
+  c.save();
+  c.setLineDash(dash);
+  c.lineDashOffset = -rot;
+  c.strokeStyle = color;
+  c.lineWidth = width;
+  wob(c, ellPts(cx, cy, r, r, 90), 1.5, seed, true);
+  c.restore();
+}
+
+export function cross(c, x, y, s) {
+  c.beginPath();
+  c.moveTo(x - s, y);
+  c.lineTo(x + s, y);
+  c.moveTo(x, y - s);
+  c.lineTo(x, y + s);
+  c.stroke();
+}
+
+/** Texto manuscrito real (firmas, etiquetas de hexágono). */
+export function handText(c, text, x, y, o = {}) {
+  const { size = 64, ink = PAPER_PAL.ink, align = 'center' } = o;
+  c.save();
+  c.font = `${size}px Caveat, "Bradley Hand", "Segoe Script", cursive`;
+  c.textAlign = align;
+  c.textBaseline = 'middle';
+  c.fillStyle = ink;
+  c.fillText(text, x, y);
+  c.restore();
+}
+
+/**
+ * plant: árbol prensado recursivo (receta del core, test.html).
+ * Ramas que se bifurcan + hojas/nudos en las puntas.
+ */
+export function plant(c, x, y, len, depth, seed, o = {}) {
+  const { stem = PAPER_PAL.ink, leaf = PAPER_PAL.accents[0], flower = PAPER_PAL.accents[2], angle = -Math.PI / 2, width = 1.6 } = o;
+  const r = rng(seed);
+  c.save();
+  c.lineCap = 'round';
+  (function branch(px, py, l, a, d, w) {
+    const x2 = px + Math.cos(a) * l;
+    const y2 = py + Math.sin(a) * l;
+    c.strokeStyle = stem;
+    c.lineWidth = w;
+    c.beginPath();
+    c.moveTo(px, py);
+    c.quadraticCurveTo((px + x2) / 2 + (r() - 0.5) * l * 0.25, (py + y2) / 2, x2, y2);
+    c.stroke();
+    if (d <= 0) {
+      c.fillStyle = leaf;
+      c.globalAlpha = 0.75;
+      for (let k = 0; k < 5; k++) {
+        const la = a + (r() - 0.5) * 2.4;
+        c.beginPath();
+        c.ellipse(x2 + Math.cos(la) * 7, y2 + Math.sin(la) * 7, 8, 3.4, la, 0, TAU);
+        c.fill();
+      }
+      c.globalAlpha = 1;
+      if (r() < 0.45) {
+        c.strokeStyle = flower;
+        c.lineWidth = 1;
+        for (let k = 0; k < 6; k++) {
+          const fa = (k / 6) * TAU;
+          c.beginPath();
+          c.moveTo(x2, y2);
+          c.lineTo(x2 + Math.cos(fa) * 9, y2 + Math.sin(fa) * 9);
+          c.stroke();
+        }
+      }
+      return;
+    }
+    const n = 2 + (r() < 0.5 ? 1 : 0);
+    for (let k = 0; k < n; k++) {
+      branch(x2, y2, l * (0.55 + r() * 0.25), a + (r() - 0.5) * 1.5, d - 1, w * 0.72);
+    }
+  })(x, y, len, angle, depth, width);
+  c.restore();
+}
+
+/** thread: hilo que baja errante por el frame (receta del core). */
+export function thread(c, x, seed, color = PAPER_PAL.accents[0], width = 1.2, h = 0, w = 0) {
+  const r = rng(seed);
+  const H = h || 600;
+  const pts = [];
+  let px = x;
+  for (let y = -10; y <= H + 10; y += 24) {
+    px += (r() - 0.5) * 26;
+    pts.push([px, y]);
+  }
+  c.save();
+  c.strokeStyle = color;
+  c.lineWidth = width;
+  c.globalAlpha = 0.8;
+  void w;
+  c.beginPath();
+  pts.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])));
+  c.stroke();
+  // nudo inicial
+  seedDot(c, pts[0][0], pts[0][1], 5);
+  c.restore();
+}
+
+/** Electrón cyan: punto + brillo (puppet de cpu.html). */
+export function drawElectron(c, x, y, s = 1, seed = 1, glow = 0.6) {
+  if (glow > 0) aster(c, x, y, 8 * s, 9, ELEC, seed + 1, glow, PAPER_PAL.paper, ELEC);
+  c.fillStyle = ELEC;
+  c.beginPath();
+  c.arc(x, y, 9 * s, 0, TAU);
+  c.fill();
+  c.fillStyle = '#fff';
+  c.beginPath();
+  c.arc(x + 3 * s, y - 3 * s, 2.6 * s, 0, TAU);
+  c.fill();
+  c.strokeStyle = PAPER_PAL.ink;
+  c.lineWidth = 2;
+  wob(c, ellPts(x, y, 9 * s, 9 * s, 24), 1.2, seed + 2, true);
+}
+
+/** CPU doodle: encapsulado + pins + die con lattice (cpu.html). */
+export function drawCPU(c, x, y, w, seed) {
+  const body = new Path2D();
+  body.rect(x - w / 2, y - w / 2, w, w);
+  c.fillStyle = PAPER_PAL.fills[3];
+  c.fill(body);
+  hatch(c, body, [x - w / 2, y - w / 2, w, w], { seed: seed + 1, alpha: 0.25 });
+  c.strokeStyle = PAPER_PAL.ink;
+  c.lineWidth = 3;
+  wob(c, [[x - w / 2, y - w / 2], [x + w / 2, y - w / 2], [x + w / 2, y + w / 2], [x - w / 2, y + w / 2]], 2.2, seed + 2, true);
+  // pins
+  for (let k = 0; k < 6; k++) {
+    const t = -w / 2 + ((k + 0.5) * w) / 6;
+    for (const [px, py, dx, dy] of [[x + t, y - w / 2, 0, -1], [x + t, y + w / 2, 0, 1], [x - w / 2, y + t, -1, 0], [x + w / 2, y + t, 1, 0]]) {
+      c.strokeStyle = PAPER_PAL.ink;
+      c.lineWidth = 2.2;
+      c.beginPath();
+      c.moveTo(px, py);
+      c.lineTo(px + dx * 26, py + dy * 26);
+      c.stroke();
+      c.fillStyle = PAPER_PAL.shade;
+      c.beginPath();
+      c.arc(px + dx * 29, py + dy * 29, 4, 0, TAU);
+      c.fill();
+    }
+  }
+  // die
+  const dw = w * 0.52;
+  const die = new Path2D();
+  die.rect(x - dw / 2, y - dw / 2, dw, dw);
+  c.fillStyle = PAPER_PAL.fills[0];
+  c.fill(die);
+  c.strokeStyle = PAPER_PAL.ink;
+  c.lineWidth = 2;
+  wob(c, [[x - dw / 2, y - dw / 2], [x + dw / 2, y - dw / 2], [x + dw / 2, y + dw / 2], [x - dw / 2, y + dw / 2]], 1.6, seed + 6, true);
+  hexLattice(c, [x - dw / 2, y - dw / 2, dw, dw], 13, PAPER_PAL.shade, 0.3, 0.9, seed + 7);
+  // electrón en el die
+  drawElectron(c, x, y, 0.8, seed + 9, 0.5);
+}
+
+/**
+ * FET simplificado: source/drain + canal que se ilumina con openK + gate.
+ * openK 0..1 = cuánto abre la compuerta (cpu.html escena fet).
+ */
+export function drawFET(c, x, y, s, seed, openK) {
+  const W_ = 300 * s;
+  const H_ = 200 * s;
+  const body = new Path2D();
+  if (body.roundRect) body.roundRect(x - W_ / 2, y - H_ / 2, W_, H_, 18 * s);
+  else body.rect(x - W_ / 2, y - H_ / 2, W_, H_);
+  c.fillStyle = PAPER_PAL.paper;
+  c.fill(body);
+  c.strokeStyle = PAPER_PAL.ink;
+  c.lineWidth = 2.6;
+  wob(c, [[x - W_ / 2, y - H_ / 2], [x + W_ / 2, y - H_ / 2], [x + W_ / 2, y + H_ / 2], [x - W_ / 2, y + H_ / 2]], 2, seed + 2, true);
+  for (const sx of [-1, 1]) {
+    const bx = x + sx * W_ * 0.3;
+    const bw = W_ * 0.22;
+    const bh = H_ * 0.6;
+    const bp = new Path2D();
+    bp.rect(bx - bw / 2, y - bh / 2, bw, bh);
+    c.fillStyle = sx < 0 ? PAPER_PAL.fills[1] : PAPER_PAL.fills[2];
+    c.fill(bp);
+    hatch(c, bp, [bx - bw / 2, y - bh / 2, bw, bh], { seed: seed + 10 + sx, alpha: 0.35 });
+    c.strokeStyle = PAPER_PAL.ink;
+    c.lineWidth = 2;
+    wob(c, [[bx - bw / 2, y - bh / 2], [bx + bw / 2, y - bh / 2], [bx + bw / 2, y + bh / 2], [bx - bw / 2, y + bh / 2]], 1.4, seed + 12 + sx, true);
+  }
+  // canal
+  const cw = W_ * 0.2;
+  const ch = H_ * 0.6;
+  c.save();
+  c.globalAlpha = 0.25 + 0.75 * openK;
+  c.fillStyle = ELEC;
+  c.fillRect(x - cw / 2, y - ch / 2, cw, ch);
+  c.restore();
+  // gate
+  const gy = y - H_ / 2 - 24 * s;
+  c.strokeStyle = PAPER_PAL.ink;
+  c.lineWidth = 3;
+  wob(c, [[x - W_ * 0.32, gy], [x + W_ * 0.32, gy]], 1.6, seed + 16, false);
+  c.beginPath();
+  c.moveTo(x, gy);
+  c.lineTo(x, y - ch / 2);
+  c.stroke();
+}
+
 export function setupCanvas(canvas) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const rect = canvas.getBoundingClientRect();

@@ -5,7 +5,7 @@ import Magnetic from '@/shared/motion/Magnetic.jsx';
 import Scramble from '@/shared/motion/Scramble.jsx';
 import { prefersReducedMotion } from '@/shared/motion/useInView.js';
 
-const PacketField = lazy(() => import('@/shared/components/canvas/PacketField.jsx'));
+const CpuField = lazy(() => import('@/shared/components/canvas/CpuField.jsx'));
 
 /** Roles rotativos con decode terminal (re-monta Scramble por key). */
 const RotatingRoles = memo(function RotatingRoles({ roles }) {
@@ -67,7 +67,7 @@ function HeroSection({ data }) {
       <div className="relative h-[340px] overflow-hidden md:h-[400px]">
         <div ref={canvasWrap} className="absolute inset-0 will-change-transform">
           <Suspense fallback={<div className="absolute inset-0 bg-paper" />}>
-            <PacketField density={8} />
+            <CpuField density={6} />
           </Suspense>
         </div>
         <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2">
@@ -90,7 +90,7 @@ function HeroSection({ data }) {
       <div className="relative z-10 flex flex-col gap-4 p-6 md:p-10">
         <Reveal from="none">
           <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-ink/60">
-            {'// una petición entra al servidor… y sale hecha portafolio'}
+            {'// la información viaja hasta el electrón… y vuelve hecha portafolio'}
           </p>
         </Reveal>
         <Reveal delay={90}>
