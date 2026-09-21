@@ -1,46 +1,70 @@
-import i18n from 'i18next'
-import { initReactI18next } from 'react-i18next'
-import es from './locales/es.json'
-import en from './locales/en.json'
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import { SITE, STORAGE_KEYS } from '@/config/app.js';
+import { loadDictionary } from './lazy-index.js';
 
-const getInitialLanguage = () => {
+export function getInitialLanguage() {
   if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('portfolio-lang')
-    if (saved && (saved === 'es' || saved === 'en')) {
-      return saved
-    }
-    const navLang = navigator.language?.split('-')[0]
-    if (navLang === 'en') return 'en'
+    const saved = localStorage.getItem(STORAGE_KEYS.LANG);
+    if (saved && SITE.supportedLangs.includes(saved)) return saved;
+    const navLang = navigator.language?.split('-')[0];
+    if (navLang === 'en') return 'en';
   }
-  return 'es'
+  return SITE.defaultLang;
 }
 
-const initialLang = getInitialLanguage()
+const initialLang = getInitialLanguage();
 
-i18n
-  .use(initReactI18next)
-  .init({
-    resources: {
-      es: { translation: es },
-      en: { translation: en }
-    },
-    lng: initialLang,
-    fallbackLng: 'es',
-    interpolation: {
-      escapeValue: false // React already escapes values
-    }
-  })
+i18n.use(initReactI18next).init({
+  lng: initialLang,
+  fallbackLng: SITE.defaultLang,
+  // Sin `resources`: los diccionarios se cargan por demanda (lazy).
+  // Esto evita descargar `en` cuando el usuario solo usa `es`.
+  interpolation: { escapeValue: false },
+  react: { useSuspense: false },
+});
 
-// Sync document lang and localStorage
 if (typeof document !== 'undefined') {
-  document.documentElement.lang = initialLang
+  document.documentElement.lang = initialLang;
 }
 
 i18n.on('languageChanged', (lng) => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('portfolio-lang', lng)
-    document.documentElement.lang = lng
+    try {
+      localStorage.setItem(STORAGE_KEYS.LANG, lng);
+    } catch {
+      /* noop */
+    }
+    document.documentElement.lang = lng;
   }
-})
+});
 
-export default i18n
+/**
+ * Carga (con caché) el diccionario y lo registra en i18next.
+ * Llamar antes/después de `changeLanguage` para garantizar traducciones.
+ */
+export async function ensureLanguageLoaded(lng) {
+  const normalized = lng?.startsWith('en') ? 'en' : 'es';
+  if (i18n.hasResourceBundle(normalized, 'translation')) return normalized;
+  const dict = await loadDictionary(normalized);
+  i18n.addResourceBundle(normalized, 'translation', dict, true, true);
+  return normalized;
+}
+
+// Precarga no bloqueante del idioma inicial + fallback en idle.
+if (typeof window !== 'undefined') {
+  const preload = () =>
+    ensureLanguageLoaded(initialLang)
+      .then(() => {
+        if (initialLang !== SITE.defaultLang) return ensureLanguageLoaded(SITE.defaultLang);
+        return undefined;
+      })
+      .catch(() => undefined);
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(preload, { timeout: 2000 });
+  } else {
+    setTimeout(preload, 0);
+  }
+}
+
+export default i18n;

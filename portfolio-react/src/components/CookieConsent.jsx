@@ -1,17 +1,24 @@
-import { useState, useEffect } from 'react'
-import { useLanguage } from '../context/LanguageContext'
+import { memo, useCallback, useState, useEffect } from 'react'
+import { useLanguage } from '@/context/LanguageContext.jsx'
+import { STORAGE_KEYS } from '@/config/app.js'
 
-export default function CookieConsent() {
+function CookieConsent() {
   const { t } = useLanguage()
   const [visible, setVisible] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
   const [consentStatus, setConsentStatus] = useState(null)
 
   useEffect(() => {
-    const savedConsent = localStorage.getItem('cookie_consent')
+    const savedConsent = localStorage.getItem(STORAGE_KEYS.COOKIE_CONSENT)
     if (!savedConsent) {
-      // Show after a brief delay for smooth entrance
-      const timer = setTimeout(() => setVisible(true), 800)
+      // Show after a brief delay for smooth entrance; idle-friendly
+      const show = () => setVisible(true)
+      let timer
+      if ('requestIdleCallback' in window) {
+        const idleId = window.requestIdleCallback(show, { timeout: 1500 })
+        return () => window.cancelIdleCallback?.(idleId)
+      }
+      timer = setTimeout(show, 800)
       return () => clearTimeout(timer)
     } else {
       setConsentStatus(savedConsent)
@@ -26,22 +33,22 @@ export default function CookieConsent() {
     return () => window.removeEventListener('open-cookie-settings', handleReopen)
   }, [])
 
-  const handleAccept = () => {
-    localStorage.setItem('cookie_consent', 'accepted')
+  const handleAccept = useCallback(() => {
+    localStorage.setItem(STORAGE_KEYS.COOKIE_CONSENT, 'accepted')
     setConsentStatus('accepted')
     setVisible(false)
     window.dispatchEvent(new CustomEvent('cookie-consent-changed', { detail: 'accepted' }))
-  }
+  }, [])
 
-  const handleDecline = () => {
-    localStorage.setItem('cookie_consent', 'rejected')
+  const handleDecline = useCallback(() => {
+    localStorage.setItem(STORAGE_KEYS.COOKIE_CONSENT, 'rejected')
     setConsentStatus('rejected')
     setVisible(false)
     // Clear session storage indicators
-    sessionStorage.removeItem('admin_token')
-    sessionStorage.removeItem('admin_active')
+    sessionStorage.removeItem(STORAGE_KEYS.ADMIN_TOKEN)
+    sessionStorage.removeItem(STORAGE_KEYS.ADMIN_ACTIVE)
     window.dispatchEvent(new CustomEvent('cookie-consent-changed', { detail: 'rejected' }))
-  }
+  }, [])
 
   if (!visible) return null
 
@@ -151,3 +158,5 @@ export default function CookieConsent() {
     </div>
   )
 }
+
+export default memo(CookieConsent)

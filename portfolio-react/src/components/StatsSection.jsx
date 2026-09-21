@@ -1,17 +1,18 @@
-import { useLanguage } from '../context/LanguageContext'
+import { memo } from 'react';
+import { useLanguage } from '@/context/LanguageContext.jsx';
 
 const statsConfig = [
   { key: 'yearsActive', icon: 'calendar_month' },
   { key: 'projects', icon: 'rocket_launch' },
   { key: 'techStack', icon: 'code' },
-  { key: 'experience', icon: 'work' }
-]
+  { key: 'experience', icon: 'work' },
+];
 
-export default function StatsSection({ stats }) {
-  const { lang } = useLanguage()
+function StatsSection({ stats }) {
+  const { lang } = useLanguage();
 
   return (
-    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" aria-label="Stats">
       {statsConfig.map(({ key, icon }) => (
         <div
           key={key}
@@ -19,12 +20,14 @@ export default function StatsSection({ stats }) {
         >
           <div className="flex items-center justify-between mb-2">
             <p className="text-gray-400 text-sm font-medium">{stats[key].label[lang]}</p>
-            <span className="material-symbols-outlined text-primary/50 group-hover:text-primary transition-colors">{icon}</span>
+            <span className="material-symbols-outlined text-primary/50 group-hover:text-primary transition-colors" aria-hidden>{icon}</span>
           </div>
           <p className="text-white text-3xl font-bold">{stats[key].value}</p>
           <p className="text-gray-500 text-xs">{stats[key].sublabel[lang]}</p>
         </div>
       ))}
     </section>
-  )
+  );
 }
+
+export default memo(StatsSection);

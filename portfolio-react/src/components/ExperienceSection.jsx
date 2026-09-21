@@ -1,12 +1,13 @@
-import { useLanguage } from '../context/LanguageContext'
+import { memo } from 'react';
+import { useLanguage } from '@/context/LanguageContext.jsx';
 
-export default function ExperienceSection({ experience, technologies }) {
-  const { lang, t } = useLanguage()
+function ExperienceSection({ experience, technologies }) {
+  const { lang, t } = useLanguage();
 
   return (
-    <section id="experience" className="xl:col-span-1 flex flex-col gap-6">
+    <section id="experience" className="xl:col-span-1 flex flex-col gap-6" aria-label={t('experience.title')}>
       <div className="flex items-center gap-2">
-        <span className="material-symbols-outlined text-primary">history_edu</span>
+        <span className="material-symbols-outlined text-primary" aria-hidden>history_edu</span>
         <h2 className="text-white text-xl font-bold">{t('experience.title')}</h2>
       </div>
 
@@ -24,7 +25,6 @@ export default function ExperienceSection({ experience, technologies }) {
         </div>
       </div>
 
-      {/* Core Technologies */}
       <div className="bg-gradient-to-br from-surface-dark to-primary/10 rounded-3xl p-6 border border-white/5">
         <h3 className="text-white font-bold mb-4">{t('tech.title')}</h3>
         <div className="flex flex-wrap gap-2">
@@ -36,18 +36,18 @@ export default function ExperienceSection({ experience, technologies }) {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-function ExperienceItem({ exp, lang, isFirst, isLast }) {
+const ExperienceItem = memo(function ExperienceItem({ exp, lang, isFirst, isLast }) {
   return (
     <>
       <div className={`flex flex-col items-center gap-1 ${isFirst ? 'pt-2' : ''} ${isLast ? 'pb-2' : ''}`}>
-        {!isFirst && <div className="w-[1px] bg-white/10 h-2"></div>}
+        {!isFirst && <div className="w-[1px] bg-white/10 h-2" aria-hidden />}
         <div className={`w-8 h-8 rounded-full ${exp.isCurrent ? 'bg-primary/20 text-primary' : 'bg-white/5 text-gray-400'} flex items-center justify-center`}>
-          <span className="material-symbols-outlined text-[18px]">{exp.icon}</span>
+          <span className="material-symbols-outlined text-[18px]" aria-hidden>{exp.icon}</span>
         </div>
-        {!isLast && <div className="w-[1px] bg-white/10 h-full grow my-2"></div>}
+        {!isLast && <div className="w-[1px] bg-white/10 h-full grow my-2" aria-hidden />}
       </div>
       <div className={`flex flex-1 flex-col ${!isLast ? 'pb-8' : ''} pt-1 pl-2`}>
         <p className="text-white text-base font-bold">{exp.title[lang]}</p>
@@ -55,5 +55,7 @@ function ExperienceItem({ exp, lang, isFirst, isLast }) {
         <p className="text-gray-400 text-sm leading-relaxed">{exp.description[lang]}</p>
       </div>
     </>
-  )
-}
+  );
+});
+
+export default memo(ExperienceSection);

@@ -1,8 +1,9 @@
-import { useLanguage } from '../context/LanguageContext'
+import { memo } from 'react';
+import { useLanguage } from '@/context/LanguageContext.jsx';
 
-export default function Footer({ data }) {
-  const { lang, t } = useLanguage()
-  const { profile, footer } = data
+function Footer({ data }) {
+  const { lang, t } = useLanguage();
+  const { profile, footer } = data;
 
   return (
     <footer className="flex flex-col items-center justify-center py-10 mt-4 border-t border-white/5">
@@ -16,7 +17,7 @@ export default function Footer({ data }) {
         <a href={profile.linkedin} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary transition-colors text-sm">
           LinkedIn
         </a>
-        <span className="text-gray-600 text-xs">•</span>
+        <span className="text-gray-600 text-xs" aria-hidden>•</span>
         <button
           type="button"
           onClick={() => window.dispatchEvent(new CustomEvent('open-cookie-settings'))}
@@ -26,5 +27,7 @@ export default function Footer({ data }) {
         </button>
       </div>
     </footer>
-  )
+  );
 }
+
+export default memo(Footer);

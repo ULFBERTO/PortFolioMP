@@ -1,12 +1,18 @@
-import { useState } from 'react'
-import { useLanguage } from '../context/LanguageContext'
+import { memo, useCallback, useState } from 'react';
+import { useLanguage } from '@/context/LanguageContext.jsx';
+import { NAVIGATION } from '@/config/app.js';
 
-export default function MobileHeader({ data }) {
-  const { lang, setLang, t } = useLanguage()
-  const [menuOpen, setMenuOpen] = useState(false)
-  const { profile } = data
+function MobileHeader({ data }) {
+  const { lang, setLang, t } = useLanguage();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { profile } = data;
 
-  const toggleLang = () => setLang(lang === 'es' ? 'en' : 'es')
+  const toggleLang = useCallback(
+    () => setLang(lang === 'es' ? 'en' : 'es'),
+    [lang, setLang],
+  );
+  const toggleMenu = useCallback(() => setMenuOpen((v) => !v), []);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   return (
     <>
@@ -18,39 +24,47 @@ export default function MobileHeader({ data }) {
           <span className="text-white font-bold">{profile.shortName}</span>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={toggleLang} className="text-primary p-2 bg-white/5 rounded-full">
+          <button type="button" onClick={toggleLang} aria-label="Cambiar idioma" className="text-primary p-2 bg-white/5 rounded-full">
             <span className="text-sm font-bold">{lang.toUpperCase()}</span>
           </button>
-          <button onClick={() => setMenuOpen(!menuOpen)} className="text-white p-2">
-            <span className="material-symbols-outlined">menu</span>
+          <button type="button" onClick={toggleMenu} aria-expanded={menuOpen} aria-label="Menú" className="text-white p-2">
+            <span className="material-symbols-outlined">{menuOpen ? 'close' : 'menu'}</span>
           </button>
         </div>
       </header>
 
-      {/* Mobile Menu */}
       {menuOpen && (
         <div className="lg:hidden fixed inset-0 bg-background-dark z-40 p-6 pt-20">
-          <nav className="flex flex-col gap-4">
-            <MobileNavLink href="#dashboard" icon="dashboard" label={t('nav.dashboard')} onClick={() => setMenuOpen(false)} active />
-            <MobileNavLink href="#projects" icon="folder_open" label={t('nav.projects')} onClick={() => setMenuOpen(false)} />
-            <MobileNavLink href="#experience" icon="history" label={t('nav.experience')} onClick={() => setMenuOpen(false)} />
-            <MobileNavLink href="#contact" icon="mail" label={t('nav.contact')} onClick={() => setMenuOpen(false)} />
+          <nav className="flex flex-col gap-4" aria-label="Móvil">
+            {NAVIGATION.map((item, index) => (
+              <MobileNavLink
+                key={item.id}
+                href={item.href}
+                icon={item.icon}
+                label={t(item.i18nKey)}
+                onClick={closeMenu}
+                active={index === 0}
+              />
+            ))}
           </nav>
         </div>
       )}
     </>
-  )
+  );
 }
 
-function MobileNavLink({ href, icon, label, onClick, active }) {
+const MobileNavLink = memo(function MobileNavLink({ href, icon, label, onClick, active }) {
   return (
     <a
       href={href}
       onClick={onClick}
+      aria-current={active ? 'page' : undefined}
       className={`flex items-center gap-3 px-4 py-3 rounded-full ${active ? 'bg-primary/10 text-primary' : 'text-gray-400'}`}
     >
-      <span className="material-symbols-outlined">{icon}</span>
+      <span className="material-symbols-outlined" aria-hidden>{icon}</span>
       <span>{label}</span>
     </a>
-  )
-}
+  );
+});
+
+export default memo(MobileHeader);
