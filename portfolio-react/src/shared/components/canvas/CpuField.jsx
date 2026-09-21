@@ -18,17 +18,16 @@ import {
   drawFET,
   setupCanvas,
 } from '@/shared/canvas/handEngine.js';
-import { useMotionMode } from '@/shared/motion/motionPref.js';
-
 /**
  * Banner hero estilo cpu.html: el electrón cyan viaja por pistas de cobre
  * con codos a 45°, la compuerta FET abre cerca del cursor, chip CPU + reloj.
  * Click = chispa de nacimiento (aster). Escucha 'packet-burst' remoto.
+ * SIEMPRE en bucle como la película de referencia: no respeta el modo
+ * global ni el SO (es el momento firma de la página).
  * Loop blindado: rAF primero + try/catch + pausa fuera de viewport.
  */
 const CpuField = memo(function CpuField({ density = 5, className = '' }) {
   const canvasRef = useRef(null);
-  const mode = useMotionMode();
   const stateRef = useRef({
     mouse: { x: -9999, y: -9999, active: false },
     sparks: [],
@@ -55,22 +54,6 @@ const CpuField = memo(function CpuField({ density = 5, className = '' }) {
         lane: i % 2,
       }));
     };
-
-    const paintStatic = () => {
-      try {
-        const { ctx, w, h } = setupCanvas(canvas);
-        paint(ctx, w, h, 0.8, st, true);
-      } catch (err) {
-        console.warn('[CpuField] static paint:', err);
-      }
-    };
-
-    if (mode !== 'full') {
-      seedElectrons();
-      paintStatic();
-      window.addEventListener('resize', paintStatic);
-      return () => window.removeEventListener('resize', paintStatic);
-    }
 
     const toLocal = (e) => {
       const rect = canvas.getBoundingClientRect();
@@ -153,7 +136,7 @@ const CpuField = memo(function CpuField({ density = 5, className = '' }) {
       canvas.removeEventListener('pointerleave', onLeave);
       canvas.removeEventListener('pointerdown', onTap);
     };
-  }, [density, mode]);
+  }, [density]);
 
   return <canvas ref={canvasRef} aria-hidden className={`absolute inset-0 h-full w-full ${className}`} />;
 });
@@ -308,9 +291,12 @@ function paint(ctx, w, h, t, st, staticFrame) {
   // anchor cyan fijo + hint arriba del zigzag (sin solape con badge ni reloj)
   seedDot(ctx, 26, h - 64, 9, PAPER_PAL.ink, ELEC);
   ctx.save();
-  ctx.fillStyle = PAPER_PAL.ink;
-  ctx.globalAlpha = 0.65;
   ctx.font = '11px ui-monospace, Menlo, monospace';
+  ctx.globalAlpha = 0.9;
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = PAPER_PAL.paper;
+  ctx.strokeText('cpu: el fet abre cerca del cursor · click = chispa', 44, h - 60);
+  ctx.fillStyle = PAPER_PAL.ink;
   ctx.fillText('cpu: el fet abre cerca del cursor · click = chispa', 44, h - 60);
   ctx.restore();
 }
