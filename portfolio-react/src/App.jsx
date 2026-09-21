@@ -8,6 +8,7 @@ import HeroSection from '@/components/HeroSection.jsx';
 import StatsSection from '@/components/StatsSection.jsx';
 import Marquee from '@/shared/motion/Marquee.jsx';
 import ScrollProgress from '@/shared/motion/ScrollProgress.jsx';
+import MotionToggle from '@/shared/motion/MotionToggle.jsx';
 import Reveal from '@/shared/motion/Reveal.jsx';
 import { useScrollSpy } from '@/shared/motion/useScrollSpy.js';
 import { Spinner, ErrorState, SectionFallback, LazySection } from '@/shared/components/ui/index.js';
@@ -50,6 +51,7 @@ function Portfolio() {
   return (
     <>
       <ScrollProgress />
+      <MotionToggle />
       {isAdmin && (
         <Suspense fallback={null}>
           <AdminPanel onClose={logout} />

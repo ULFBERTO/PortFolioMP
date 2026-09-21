@@ -3,18 +3,19 @@ import { useLanguage } from '@/context/LanguageContext.jsx';
 import Reveal from '@/shared/motion/Reveal.jsx';
 import Magnetic from '@/shared/motion/Magnetic.jsx';
 import Scramble from '@/shared/motion/Scramble.jsx';
-import { prefersReducedMotion } from '@/shared/motion/useInView.js';
+import { useMotionMode } from '@/shared/motion/motionPref.js';
 
 const CpuField = lazy(() => import('@/shared/components/canvas/CpuField.jsx'));
 
 /** Roles rotativos con decode terminal (re-monta Scramble por key). */
 const RotatingRoles = memo(function RotatingRoles({ roles }) {
   const [i, setI] = useState(0);
+  const mode = useMotionMode();
   useEffect(() => {
-    if (prefersReducedMotion() || roles.length < 2) return undefined;
+    if (mode !== 'full' || roles.length < 2) return undefined;
     const id = setInterval(() => setI((v) => (v + 1) % roles.length), 3000);
     return () => clearInterval(id);
-  }, [roles.length]);
+  }, [roles.length, mode]);
   const role = roles[i % roles.length];
   return (
     <span className="inline-flex items-center gap-1 font-mono text-sm font-bold text-ink">
@@ -36,9 +37,13 @@ function HeroSection({ data }) {
 
   // Parallax sutil del canvas con el scroll (transform, rAF throttle)
   const canvasWrap = useRef(null);
+  const heroMode = useMotionMode();
   useEffect(() => {
     const el = canvasWrap.current;
-    if (!el || prefersReducedMotion()) return undefined;
+    if (!el || heroMode !== 'full') {
+      if (el) el.style.transform = '';
+      return undefined;
+    }
     let raf = 0;
     let ticking = false;
     const update = () => {
@@ -60,7 +65,7 @@ function HeroSection({ data }) {
       cancelAnimationFrame(raf);
       window.removeEventListener('scroll', onScroll);
     };
-  }, []);
+  }, [heroMode]);
 
   return (
     <section id="dashboard" className="ink-card tape relative overflow-hidden p-0">

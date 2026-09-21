@@ -17,21 +17,24 @@ import {
   drawCPU,
   drawFET,
   setupCanvas,
-  prefersReducedMotion,
 } from '@/shared/canvas/handEngine.js';
+import { useMotionMode } from '@/shared/motion/motionPref.js';
 
 /**
  * Banner hero estilo cpu.html: el electrón cyan viaja por pistas de cobre
  * con codos a 45°, la compuerta FET abre cerca del cursor, chip CPU + reloj.
  * Click = chispa de nacimiento (aster). Escucha 'packet-burst' remoto.
+ * Loop blindado: rAF primero + try/catch + pausa fuera de viewport.
  */
 const CpuField = memo(function CpuField({ density = 5, className = '' }) {
   const canvasRef = useRef(null);
+  const mode = useMotionMode();
   const stateRef = useRef({
     mouse: { x: -9999, y: -9999, active: false },
     sparks: [],
     electrons: [],
     openK: 0,
+    visible: true,
   });
 
   useEffect(() => {
@@ -41,30 +44,32 @@ const CpuField = memo(function CpuField({ density = 5, className = '' }) {
     let raf = 0;
     let running = true;
 
-    const seedElectrons = (w) => {
+    const seedElectrons = () => {
       const r = rng(307);
       const n = clamp(Math.round(density), 2, 9);
       st.electrons = Array.from({ length: n }, (_, i) => ({
         u: r(),
-        speed: 0.10 + r() * 0.12,
+        speed: 0.17 + r() * 0.2,
         s: 0.55 + r() * 0.5,
         seed: 200 + i * 23,
         lane: i % 2,
       }));
     };
 
-    const paintOnce = () => {
-      const { ctx, w, h } = setupCanvas(canvas);
-      paint(ctx, w, h, 0.8, st, true);
+    const paintStatic = () => {
+      try {
+        const { ctx, w, h } = setupCanvas(canvas);
+        paint(ctx, w, h, 0.8, st, true);
+      } catch (err) {
+        console.warn('[CpuField] static paint:', err);
+      }
     };
 
-    if (prefersReducedMotion()) {
-      const { w } = canvas.getBoundingClientRect();
-      seedElectrons(w || 800);
-      paintOnce();
-      const onResize = () => paintOnce();
-      window.addEventListener('resize', onResize);
-      return () => window.removeEventListener('resize', onResize);
+    if (mode !== 'full') {
+      seedElectrons();
+      paintStatic();
+      window.addEventListener('resize', paintStatic);
+      return () => window.removeEventListener('resize', paintStatic);
     }
 
     const toLocal = (e) => {
@@ -107,39 +112,48 @@ const CpuField = memo(function CpuField({ density = 5, className = '' }) {
     canvas.addEventListener('pointerleave', onLeave);
     canvas.addEventListener('pointerdown', onTap);
 
-    const resize = () => {
-      const { w } = canvas.getBoundingClientRect();
-      seedElectrons(w);
-    };
-    resize();
-    window.addEventListener('resize', resize);
+    const io = new IntersectionObserver(([entry]) => {
+      st.visible = entry.isIntersecting;
+    });
+    io.observe(canvas);
+
+    const onResize = () => seedElectrons();
+    window.addEventListener('resize', onResize);
+    seedElectrons();
 
     const t0 = performance.now();
     const loop = (now) => {
-      if (!running) return;
-      const t = (now - t0) / 1000;
-      const { ctx, w, h } = setupCanvas(canvas);
-      for (const e of st.electrons) {
-        e.u += e.speed * 0.016;
-        if (e.u > 1.1) e.u = -0.1;
+      // rAF primero: un error de pintado jamás mata el bucle
+      if (running) raf = requestAnimationFrame(loop);
+      else return;
+      if (!st.visible) return;
+      try {
+        const t = (now - t0) / 1000;
+        const { ctx, w, h } = setupCanvas(canvas);
+        for (const e of st.electrons) {
+          e.u += e.speed * 0.016;
+          if (e.u > 1.1) e.u = -0.1;
+        }
+        for (const s of st.sparks) s.t += 0.016;
+        st.sparks = st.sparks.filter((s) => s.t < 1.1);
+        paint(ctx, w, h, t, st, false);
+      } catch (err) {
+        console.warn('[CpuField] frame:', err);
       }
-      for (const s of st.sparks) s.t += 0.016;
-      st.sparks = st.sparks.filter((s) => s.t < 1.1);
-      paint(ctx, w, h, t, st, false);
-      raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
 
     return () => {
       running = false;
       cancelAnimationFrame(raf);
-      window.removeEventListener('resize', resize);
+      io.disconnect();
+      window.removeEventListener('resize', onResize);
       window.removeEventListener('packet-burst', onRemoteBurst);
       canvas.removeEventListener('pointermove', onMove);
       canvas.removeEventListener('pointerleave', onLeave);
       canvas.removeEventListener('pointerdown', onTap);
     };
-  }, [density]);
+  }, [density, mode]);
 
   return <canvas ref={canvasRef} aria-hidden className={`absolute inset-0 h-full w-full ${className}`} />;
 });
@@ -180,9 +194,17 @@ function paint(ctx, w, h, t, st, staticFrame) {
 
   const cy = h * 0.58;
   const pts = tracePath(w, h);
+  const cpuX = w * 0.84;
+  const cpuY = cy - 10;
 
-  // chip CPU al fondo derecha
-  drawCPU(ctx, w * 0.84, cy - 10, Math.min(190, w * 0.2), 14);
+  // chip CPU al fondo derecha + anillo orbital (movimiento inconfundible)
+  drawCPU(ctx, cpuX, cpuY, Math.min(190, w * 0.2), 14);
+  if (!staticFrame) {
+    dashedRing(ctx, cpuX, cpuY, Math.min(190, w * 0.2) * 0.78, ELEC, 44, [8, 10], 2, t * 40);
+    const oa = t * 1.2;
+    const orad = Math.min(190, w * 0.2) * 0.78;
+    drawElectron(ctx, cpuX + Math.cos(oa) * orad, cpuY + Math.sin(oa) * orad, 0.55, 445, 0.7);
+  }
 
   // pistas de cobre (doble línea)
   ctx.strokeStyle = PAPER_PAL.ink;
@@ -194,10 +216,25 @@ function paint(ctx, w, h, t, st, staticFrame) {
   ctx.lineWidth = 1.4;
   for (let k = 0; k < 7; k++) cross(ctx, 30 + k * ((w - 60) / 6) + (r() - 0.5) * 20, cy + (r() - 0.5) * 220, 5);
 
-  // FET: la compuerta abre cerca del cursor
+  // pulso viajero sobre la pista (bucle visible)
+  if (!staticFrame) {
+    const pu = (t * 0.22) % 1;
+    const pp = pointOnPath(pts, pu);
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    ctx.strokeStyle = ELEC;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(pp.x, pp.y + 17, 12 + Math.sin(t * 6) * 3, 0, TAU);
+    ctx.stroke();
+    ctx.restore();
+    drawElectron(ctx, pp.x, pp.y + 17, 0.8, 777, 0.9);
+  }
+
+  // FET: la compuerta abre cerca del cursor (+ respiración propia)
   const fetX = w * 0.34;
   const fetY = cy - 6;
-  let openTarget = 0.25 + 0.2 * Math.sin(t * 1.4);
+  let openTarget = 0.3 + 0.25 * Math.sin(t * 1.6);
   if (st.mouse.active) {
     const d = Math.hypot(fetX - st.mouse.x, fetY - st.mouse.y);
     if (d < 220) openTarget = Math.max(openTarget, 1 - d / 220);
@@ -205,15 +242,26 @@ function paint(ctx, w, h, t, st, staticFrame) {
   st.openK += ((staticFrame ? 0.7 : openTarget) - st.openK) * 0.08;
   const fs = clamp(Math.min(w, h) / 420, 0.55, 1.1);
   drawFET(ctx, fetX, fetY, fs, 83, clamp(st.openK, 0, 1));
+  if (!staticFrame) dashedRing(ctx, fetX, fetY, 150 * fs, PAPER_PAL.ink, 55, [14, 10], 1.6, -t * 26);
 
-  // reloj doubling: 1,2,4,8,16 electrones según fase
-  const phase = Math.floor(t / 1.4) % 5;
+  // reloj doubling: 1,2,4,8,16 electrones según fase (más rápido)
+  const phase = Math.floor(t / 1.1) % 5;
   const nD = Math.pow(2, phase);
   const rr = rng(32 + phase);
   for (let j = 0; j < Math.min(nD, 16); j++) {
     const ex = w * 0.08 + rr() * w * 0.2;
     const ey = h * 0.14 + rr() * h * 0.16;
     drawElectron(ctx, ex, ey, 0.5, 330 + j, 0.35);
+  }
+
+  // asters centelleantes de fondo
+  if (!staticFrame) {
+    for (let k = 0; k < 3; k++) {
+      const ax = w * (0.15 + k * 0.3);
+      const ay = h * (0.2 + (k % 2) * 0.12);
+      const g = 0.3 + 0.6 * (0.5 + 0.5 * Math.sin(t * 2.2 + k * 2.1));
+      aster(ctx, ax, ay, 7, 9, k === 1 ? ELEC : PAPER_PAL.shade, 500 + k * 37, g * 0.8);
+    }
   }
 
   // electrones viajando por la pista
@@ -228,13 +276,14 @@ function paint(ctx, w, h, t, st, staticFrame) {
     drawElectron(ctx, p.x, py, e.s, e.seed, staticFrame ? 0.5 : glow);
   }
 
-  // zigzag del reloj abajo
+  // zigzag del reloj abajo (ondula en bucle)
   ctx.strokeStyle = PAPER_PAL.ink;
   ctx.lineWidth = 5;
   ctx.globalAlpha = 0.85;
   ctx.beginPath();
   for (let x = 20; x <= w - 20; x += 26) {
-    const sq = (Math.floor(x / 26) % 2 ? -16 : 16) * (staticFrame ? 1 : 1 + 0.1 * Math.sin(t * 4));
+    const wave = staticFrame ? 0 : Math.sin(x * 0.03 + t * 5) * 5;
+    const sq = (Math.floor(x / 26) % 2 ? -16 : 16) + wave;
     if (x === 20) ctx.moveTo(x, h - 34 + sq);
     else ctx.lineTo(x, h - 34 + sq);
   }
@@ -256,13 +305,13 @@ function paint(ctx, w, h, t, st, staticFrame) {
     seedDot(ctx, st.mouse.x, st.mouse.y, 7, PAPER_PAL.ink, ELEC);
   }
 
-  // anchor cyan fijo
-  seedDot(ctx, 26, 26, 9, PAPER_PAL.ink, ELEC);
+  // anchor cyan fijo + hint arriba del zigzag (sin solape con badge ni reloj)
+  seedDot(ctx, 26, h - 64, 9, PAPER_PAL.ink, ELEC);
   ctx.save();
   ctx.fillStyle = PAPER_PAL.ink;
   ctx.globalAlpha = 0.65;
   ctx.font = '11px ui-monospace, Menlo, monospace';
-  ctx.fillText('cpu: el fet abre cerca del cursor · click = chispa', 44, 30);
+  ctx.fillText('cpu: el fet abre cerca del cursor · click = chispa', 44, h - 60);
   ctx.restore();
 }
 

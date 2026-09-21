@@ -1,15 +1,19 @@
 import { memo, useEffect, useRef } from 'react';
-import { prefersReducedMotion } from './useInView.js';
+import { useMotionMode } from './motionPref.js';
 
 /** Botón magnético: atrae hacia el cursor (máx 10px), vuelve con lerp. Solo puntero fino. */
 const Magnetic = memo(function Magnetic({ children, strength = 10, className = '' }) {
   const ref = useRef(null);
   const target = useRef({ x: 0, y: 0 });
   const pos = useRef({ x: 0, y: 0 });
+  const mode = useMotionMode();
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || prefersReducedMotion()) return undefined;
+    if (!el || mode !== 'full') {
+      if (el) el.style.transform = '';
+      return undefined;
+    }
     if (window.matchMedia?.('(pointer: coarse)').matches) return undefined;
     let raf = 0;
     let hovering = false;
@@ -51,7 +55,7 @@ const Magnetic = memo(function Magnetic({ children, strength = 10, className = '
       el.removeEventListener('pointermove', onMove);
       el.removeEventListener('pointerleave', onLeave);
     };
-  }, [strength]);
+  }, [strength, mode]);
 
   return (
     <span ref={ref} className={`inline-block will-change-transform ${className}`}>

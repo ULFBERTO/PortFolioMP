@@ -147,3 +147,25 @@ body {
   .marquee-track, .caret-blink, .scroll-dot { animation: none; }
   .stamp { opacity: 1; transform: rotate(-8deg) scale(1); }
 }
+
+/* Override manual del toggle (gana al SO por especificidad).
+   data-motion lo pone main.jsx antes del primer paint. */
+html[data-motion="reduced"] .float-animation,
+html[data-motion="reduced"] .animate-fadeIn,
+html[data-motion="reduced"] .animate-scaleIn,
+html[data-motion="reduced"] .marquee-track,
+html[data-motion="reduced"] .caret-blink,
+html[data-motion="reduced"] .scroll-dot { animation: none; }
+html[data-motion="reduced"] .stamp { opacity: 1; transform: rotate(-8deg) scale(1); }
+
+html[data-motion="full"] .marquee-track { animation: marquee-x 28s linear infinite; }
+html[data-motion="full"] .marquee:hover .marquee-track { animation-play-state: paused; }
+html[data-motion="full"] .caret-blink { animation: caret-blink 1.1s steps(1) infinite; }
+html[data-motion="full"] .scroll-dot { animation: scroll-dot 1.8s ease-in-out infinite; }
+html[data-motion="full"] .float-animation { animation: float 5s ease-in-out infinite; }
+html[data-motion="full"] .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+html[data-motion="full"] .animate-scaleIn { animation: scaleIn 0.28s ease-out; }
+html[data-motion="full"] .stamp {
+  transform: rotate(-8deg) scale(0.6);
+  opacity: 0;
+}

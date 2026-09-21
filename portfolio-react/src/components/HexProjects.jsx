@@ -2,6 +2,7 @@ import { Suspense, lazy, memo, useCallback, useEffect, useMemo, useRef, useState
 import { useLanguage } from '@/context/LanguageContext.jsx';
 import { SectionHead } from '@/shared/components/ui/Ink.jsx';
 import Reveal from '@/shared/motion/Reveal.jsx';
+import { useMotionMode } from '@/shared/motion/motionPref.js';
 import {
   PAPER_PAL,
   ELEC,
@@ -20,7 +21,6 @@ import {
   handText,
   hatch,
   setupCanvas,
-  prefersReducedMotion,
 } from '@/shared/canvas/handEngine.js';
 
 const ProjectModal = lazy(() => import('./ProjectModal.jsx'));
@@ -37,6 +37,8 @@ function HexProjects({ projects }) {
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
   const openedFor = useRef(-1); // índice cuya extrusión ya abrió el modal
+  const lastCursor = useRef('crosshair');
+  const mode = useMotionMode();
   const [modalProject, setModalProject] = useState(null);
   const anim = useRef({
     mouse: { x: -9999, y: -9999, inside: false },
@@ -87,14 +89,14 @@ function HexProjects({ projects }) {
     (index) => {
       const st = anim.current;
       if (st.expanding !== -1 || index < 0 || index >= projects.length) return;
-      if (prefersReducedMotion()) {
+      if (mode !== 'full') {
         setModalProject(projects[index]);
         return;
       }
       st.expanding = index;
       st.extTarget = 1;
     },
-    [projects],
+    [projects, mode],
   );
 
   const closeModal = useCallback(() => {
@@ -104,20 +106,35 @@ function HexProjects({ projects }) {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return undefined;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return undefined;
     const st = anim.current;
     let raf = 0;
     let running = true;
+
+    // Cursor nativo SIEMPRE visible por defecto; solo se oculta mientras
+    // el cursor custom se está dibujando (bucle vivo + puntero dentro).
+    const setCursor = (c) => {
+      if (lastCursor.current !== c) {
+        lastCursor.current = c;
+        canvas.style.cursor = c;
+      }
+    };
+
+    const paintStatic = () => {
+      try {
+        const { ctx, w, h } = setupCanvas(canvas);
+        paint(ctx, w, h, 0, st, projects, fills);
+      } catch (err) {
+        console.warn('[HexProjects] static paint:', err);
+      }
+    };
 
     const toLocal = (e) => {
       const rect = canvas.getBoundingClientRect();
       return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     };
-    const onMove = (e) => {
-      const p = toLocal(e);
-      st.mouse.x = p.x;
-      st.mouse.y = p.y;
-      st.mouse.inside = true;
+    const pickHover = (p) => {
       let h = -1;
       for (let i = 0; i < st.cells.length; i++) {
         if (pointInHex(p.x, p.y, st.cells[i].x, st.cells[i].y, st.s)) {
@@ -127,66 +144,86 @@ function HexProjects({ projects }) {
       }
       st.hover = h;
     };
+    const onMove = (e) => {
+      const p = toLocal(e);
+      st.mouse.x = p.x;
+      st.mouse.y = p.y;
+      st.mouse.inside = true;
+      pickHover(p);
+      // En modo estático no hay loop: repintar por evento para hover feedback
+      if (mode !== 'full') paintStatic();
+    };
     const onLeave = () => {
       st.mouse.inside = false;
       st.mouse.x = -9999;
       st.hover = -1;
+      setCursor('crosshair');
+      if (mode !== 'full') paintStatic();
     };
     const onTap = (e) => {
       onMove(e);
       if (st.hover !== -1) openProject(st.hover);
     };
-    canvas.addEventListener('pointermove', onMove);
-    canvas.addEventListener('pointerleave', onLeave);
-    canvas.addEventListener('pointerdown', onTap);
+    // Listeners en el contenedor: entrar al área siempre registra el puntero
+    wrap.addEventListener('pointermove', onMove);
+    wrap.addEventListener('pointerleave', onLeave);
+    wrap.addEventListener('pointerdown', onTap);
 
     const io = new IntersectionObserver(([entry]) => {
       st.visible = entry.isIntersecting;
     });
-    if (wrapRef.current) io.observe(wrapRef.current);
+    io.observe(wrap);
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
       layout(rect.width, rect.height, projects.length);
-      if (prefersReducedMotion()) {
-        const { ctx, w, h } = setupCanvas(canvas);
-        paint(ctx, w, h, 0, st, projects, fills);
-      }
+      if (mode !== 'full') paintStatic();
     };
     resize();
     window.addEventListener('resize', resize);
 
-    if (prefersReducedMotion()) {
+    if (mode !== 'full') {
+      setCursor('crosshair');
       return () => {
         window.removeEventListener('resize', resize);
-        canvas.removeEventListener('pointermove', onMove);
-        canvas.removeEventListener('pointerleave', onLeave);
-        canvas.removeEventListener('pointerdown', onTap);
+        wrap.removeEventListener('pointermove', onMove);
+        wrap.removeEventListener('pointerleave', onLeave);
+        wrap.removeEventListener('pointerdown', onTap);
         io.disconnect();
       };
     }
 
     const loop = () => {
-      if (!running) return;
-      raf = requestAnimationFrame(loop);
-      if (!st.visible) return;
-      // extrusión: easing hacia el target
-      const speed = st.extTarget === 1 ? 0.075 : 0.1;
-      st.ext += (st.extTarget - st.ext) * speed;
-      if (Math.abs(st.extTarget - st.ext) < 0.005) {
-        st.ext = st.extTarget;
-        if (st.ext === 1 && st.expanding !== -1 && openedFor.current !== st.expanding) {
-          openedFor.current = st.expanding;
-          setModalProject(projects[st.expanding]);
-        }
-        if (st.ext === 0) {
-          st.expanding = -1;
-          openedFor.current = -1;
-        }
+      if (running) raf = requestAnimationFrame(loop);
+      else return;
+      if (!st.visible) {
+        setCursor('crosshair');
+        return;
       }
-      st.hoverK += ((st.hover !== -1 ? 1 : 0) - st.hoverK) * 0.15;
-      const { ctx, w, h } = setupCanvas(canvas);
-      paint(ctx, w, h, performance.now() / 1000, st, projects, fills);
+      try {
+        // extrusión: easing hacia el target
+        const speed = st.extTarget === 1 ? 0.075 : 0.1;
+        st.ext += (st.extTarget - st.ext) * speed;
+        if (Math.abs(st.extTarget - st.ext) < 0.005) {
+          st.ext = st.extTarget;
+          if (st.ext === 1 && st.expanding !== -1 && openedFor.current !== st.expanding) {
+            openedFor.current = st.expanding;
+            setModalProject(projects[st.expanding]);
+          }
+          if (st.ext === 0) {
+            st.expanding = -1;
+            openedFor.current = -1;
+          }
+        }
+        st.hoverK += ((st.hover !== -1 ? 1 : 0) - st.hoverK) * 0.15;
+        // Cursor custom solo si realmente lo dibujamos en este frame
+        setCursor(st.mouse.inside ? 'none' : 'crosshair');
+        const { ctx, w, h } = setupCanvas(canvas);
+        paint(ctx, w, h, performance.now() / 1000, st, projects, fills);
+      } catch (err) {
+        console.warn('[HexProjects] frame:', err);
+        setCursor('crosshair');
+      }
     };
     raf = requestAnimationFrame(loop);
 
@@ -194,13 +231,13 @@ function HexProjects({ projects }) {
       running = false;
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
-      canvas.removeEventListener('pointermove', onMove);
-      canvas.removeEventListener('pointerleave', onLeave);
-      canvas.removeEventListener('pointerdown', onTap);
+      wrap.removeEventListener('pointermove', onMove);
+      wrap.removeEventListener('pointerleave', onLeave);
+      wrap.removeEventListener('pointerdown', onTap);
       io.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projects.length, layout, fills, openProject]);
+  }, [projects.length, layout, fills, openProject, mode]);
 
   return (
     <section id="projects" className="flex flex-col gap-5" aria-label={t('projects.title')}>
@@ -212,7 +249,7 @@ function HexProjects({ projects }) {
           <canvas
             ref={canvasRef}
             className="block h-[380px] w-full md:h-[440px]"
-            style={{ cursor: 'none', touchAction: 'manipulation' }}
+            style={{ cursor: 'crosshair', touchAction: 'manipulation' }}
             role="img"
             aria-label={t('projects.title')}
           />

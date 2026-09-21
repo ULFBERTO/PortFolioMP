@@ -1,13 +1,17 @@
 import { memo, useEffect, useRef } from 'react';
-import { prefersReducedMotion } from './useInView.js';
+import { useMotionMode } from './motionPref.js';
 
 /** Tilt 3D sutil en cards (rotateX/Y máx 7°, solo transform). */
 const Tilt = memo(function Tilt({ children, max = 7, className = '', style }) {
   const ref = useRef(null);
+  const mode = useMotionMode();
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || prefersReducedMotion()) return undefined;
+    if (!el || mode !== 'full') {
+      if (el) el.style.transform = '';
+      return undefined;
+    }
     if (window.matchMedia?.('(pointer: coarse)').matches) return undefined;
     let raf = 0;
     let target = { x: 0, y: 0 };
@@ -34,7 +38,7 @@ const Tilt = memo(function Tilt({ children, max = 7, className = '', style }) {
       el.removeEventListener('pointermove', onMove);
       el.removeEventListener('pointerleave', onLeave);
     };
-  }, [max]);
+  }, [max, mode]);
 
   return (
     <div ref={ref} className={className} style={{ transition: 'transform .25s ease', ...style }}>

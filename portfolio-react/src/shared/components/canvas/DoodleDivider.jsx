@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef } from 'react';
-import { PAPER_PAL, TAU, rng, setupCanvas, prefersReducedMotion } from '@/shared/canvas/handEngine.js';
+import { PAPER_PAL, TAU, rng, setupCanvas } from '@/shared/canvas/handEngine.js';
+import { useMotionMode } from '@/shared/motion/motionPref.js';
 
 /**
  * Divider procedural: anillos dashed + dottedArc + paquete viajero.
@@ -7,6 +8,7 @@ import { PAPER_PAL, TAU, rng, setupCanvas, prefersReducedMotion } from '@/shared
  */
 const DoodleDivider = memo(function DoodleDivider({ seed = 11, label = '' }) {
   const ref = useRef(null);
+  const mode = useMotionMode();
 
   useEffect(() => {
     const canvas = ref.current;
@@ -70,7 +72,7 @@ const DoodleDivider = memo(function DoodleDivider({ seed = 11, label = '' }) {
       ctx.fill();
     };
 
-    if (prefersReducedMotion()) {
+    if (mode !== 'full') {
       draw(0.4);
       return undefined;
     }
@@ -95,7 +97,7 @@ const DoodleDivider = memo(function DoodleDivider({ seed = 11, label = '' }) {
       cancelAnimationFrame(raf);
       io.disconnect();
     };
-  }, [seed]);
+  }, [seed, mode]);
 
   return (
     <div className="relative flex items-center gap-3" aria-hidden>

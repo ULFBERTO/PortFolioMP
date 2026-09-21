@@ -1,17 +1,19 @@
 import { memo, useEffect, useRef } from 'react';
-import { prefersReducedMotion } from './useInView.js';
+import { useMotionMode } from './motionPref.js';
 
 /** Barra de progreso de lectura (scaleX, rAF throttle). */
 const ScrollProgress = memo(function ScrollProgress() {
   const ref = useRef(null);
+  const mode = useMotionMode();
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return undefined;
-    if (prefersReducedMotion()) {
+    if (mode !== 'full') {
       el.style.display = 'none';
       return undefined;
     }
+    el.style.display = '';
     let raf = 0;
     let ticking = false;
     const update = () => {
@@ -35,7 +37,7 @@ const ScrollProgress = memo(function ScrollProgress() {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
     };
-  }, []);
+  }, [mode]);
 
   return (
     <div className="pointer-events-none fixed inset-x-0 top-0 z-[90] h-1.5 bg-ink/10" aria-hidden>
