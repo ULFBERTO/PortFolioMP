@@ -1,6 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { TEMPLATES, templateById } from './catalog.js';
-import { printAtsPdf } from '@/features/cvs/atsResume.js';
 
 /**
  * TemplatePreview - renders a miniature static version of a template
@@ -184,6 +183,71 @@ function buildPreviewHtml(data, theme) {
 </div>
 </body></html>`;
 }
+
+/**
+ * TemplateCard - casilla con mini página estática de la plantilla (solo divs,
+ * sin imágenes ni iframes). ~500px adaptada al grid responsive.
+ */
+const TemplateCard = memo(function TemplateCard({ template, index, isCurrent, onHover, onLeave, onClick }) {
+  const th = template.theme || {};
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={onHover}
+      onMouseLeave={onLeave}
+      onFocus={onHover}
+      onBlur={onLeave}
+      aria-pressed={isCurrent}
+      className={`group flex min-h-[500px] flex-col overflow-hidden rounded-xl border-[2.5px] text-left transition-all ${
+        isCurrent ? 'border-ink shadow-[5px_5px_0_#1e1630]' : 'border-ink/25 hover:border-ink hover:shadow-[4px_4px_0_#1e1630]'
+      }`}
+      style={{ background: th.paper }}
+    >
+      {/* Mini página estática */}
+      <div className="pointer-events-none flex-1 p-4" aria-hidden style={{ color: th.ink, fontFamily: th.font || 'Arial,Helvetica,sans-serif' }}>
+        <div className="mb-3 rounded-md px-3 py-2" style={{ background: th.primary }}>
+          <div className="h-3 w-2/3 rounded" style={{ background: th.paper }} />
+          <div className="mt-1.5 h-2 w-1/2 rounded opacity-80" style={{ background: th.paper }} />
+        </div>
+        <div className="mb-1 h-2.5 w-1/3 rounded" style={{ background: th.primary }} />
+        <div className="mb-3 space-y-1.5">
+          <div className="h-2 w-full rounded opacity-50" style={{ background: th.ink }} />
+          <div className="h-2 w-11/12 rounded opacity-50" style={{ background: th.ink }} />
+          <div className="h-2 w-4/5 rounded opacity-50" style={{ background: th.ink }} />
+        </div>
+        <div className="mb-3 flex gap-1.5">
+          {[0, 1, 2].map((k) => (
+            <span key={k} className="h-4 w-12 rounded-full" style={{ background: th.accent }} />
+          ))}
+        </div>
+        <div className="mb-1 h-2.5 w-2/5 rounded" style={{ background: th.primary }} />
+        {[0, 1].map((k) => (
+          <div key={k} className="mb-2 rounded-md border p-2" style={{ borderColor: th.primary }}>
+            <div className="h-2.5 w-3/5 rounded" style={{ background: th.ink }} />
+            <div className="mt-1.5 h-2 w-full rounded opacity-40" style={{ background: th.ink }} />
+            <div className="mt-1 h-2 w-5/6 rounded opacity-40" style={{ background: th.ink }} />
+          </div>
+        ))}
+      </div>
+      {/* Pie con nombre */}
+      <div className="flex items-center gap-2 border-t-2 p-3" style={{ borderColor: th.ink, background: th.paper }}>
+        <span className="material-symbols-outlined text-xl" style={{ color: th.primary }} aria-hidden>{template.icon}</span>
+        <div className="min-w-0">
+          <p className="truncate font-mono text-xs font-bold" style={{ color: th.ink }}>
+            {String(index + 1).padStart(2, '0')} · {template.name.es}
+          </p>
+          <p className="truncate text-[11px] opacity-70" style={{ color: th.ink }}>{template.desc.es}</p>
+        </div>
+        {isCurrent && (
+          <span className="ml-auto rounded-full px-2 py-0.5 font-mono text-[10px] font-bold" style={{ background: th.primary, color: th.paper }}>
+            actual
+          </span>
+        )}
+      </div>
+    </button>
+  );
+});
 
 /**
  * TemplateSelectorModal - Modal con grid 5x3 + scroll + live preview
