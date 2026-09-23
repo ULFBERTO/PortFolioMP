@@ -92,7 +92,7 @@ func (d *DB) AutoMigrate(ctx context.Context) error {
 		slug TEXT NOT NULL,
 		title TEXT NOT NULL DEFAULT '',
 		profession TEXT NOT NULL DEFAULT 'general' CHECK (profession IN ('developer','designer','general')),
-		template TEXT NOT NULL DEFAULT 'hand-drawn' CHECK (template IN ('hand-drawn','executive','minimal')),
+		template TEXT NOT NULL DEFAULT 'hand-drawn' CHECK (template ~ '^[a-z0-9-]{1,32}$'),
 		visibility TEXT NOT NULL DEFAULT 'public' CHECK (visibility IN ('public','private')),
 		data JSONB NOT NULL DEFAULT '{}',
 		created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -106,6 +106,10 @@ func (d *DB) AutoMigrate(ctx context.Context) error {
 	_, err := d.SQL.ExecContext(ctx, createTablesSQL)
 	if err != nil {
 		return fmt.Errorf("failed to create tables: %w", err)
+	}
+
+	if err := d.migrateTemplateCheck(ctx); err != nil {
+		log.Printf("[DB] Warning: no se pudo relajar el CHECK de template: %v", err)
 	}
 
 	// Check if portfolio_state is already seeded
@@ -134,6 +138,16 @@ func (d *DB) AutoMigrate(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// migrateTemplateCheck relaja el CHECK de template al patrón del catálogo
+// frontend. Idempotente: DROP IF EXISTS + ADD con el mismo nombre.
+func (d *DB) migrateTemplateCheck(ctx context.Context) error {
+	if _, err := d.SQL.ExecContext(ctx, `ALTER TABLE cvs DROP CONSTRAINT IF EXISTS cvs_template_check`); err != nil {
+		return err
+	}
+	_, err := d.SQL.ExecContext(ctx, `ALTER TABLE cvs ADD CONSTRAINT cvs_template_check CHECK (template ~ '^[a-z0-9-]{1,32}$')`)
+	return err
 }
 
 // GetPortfolio retrieves the current portfolio JSON

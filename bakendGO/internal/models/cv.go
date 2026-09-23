@@ -2,8 +2,11 @@ package models
 
 import (
 	"encoding/json"
+	"regexp"
 	"time"
 )
+
+var templatePattern = regexp.MustCompile(`^[a-z0-9-]{1,32}$`)
 
 // Profession types (each has its own explicit form in the frontend)
 const (
@@ -74,9 +77,12 @@ func ValidProfession(p string) bool {
 	return validIn(p, ProfessionDeveloper, ProfessionDesigner, ProfessionGeneral)
 }
 
-// ValidTemplate reports whether t is a known visual template.
+// ValidTemplate reports whether t is a usable template id.
+// El catálogo vive en el frontend (15+ plantillas y creciendo), así que el
+// backend solo valida formato seguro: 1-32 chars [a-z0-9-].
+// CVView aplica fallback a hand-drawn ante un id desconocido.
 func ValidTemplate(t string) bool {
-	return validIn(t, TemplateHandDrawn, TemplateExecutive, TemplateMinimal)
+	return templatePattern.MatchString(t)
 }
 
 // ValidVisibility reports whether v is a known visibility mode.
