@@ -7,6 +7,7 @@ import CvForm from '@/features/cvs/CvForm.jsx';
 import CVView from '@/features/cvview/CVView.jsx';
 import { useScrollSpy } from '@/shared/motion/useScrollSpy.js';
 import { ErrorState, Spinner } from '@/shared/components/ui/index.js';
+import TemplateSelectorModal from '@/features/cvs/TemplateSelectorModal.jsx';
 
 const SECTION_IDS = ['dashboard', 'projects', 'experience', 'contact'];
 
@@ -35,6 +36,7 @@ export const NewCV = memo(function NewCV() {
   const [visibility, setVisibility] = useState('public');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
 
   const onCreate = async () => {
     setError('');
@@ -61,6 +63,13 @@ export const NewCV = memo(function NewCV() {
     }
   };
 
+  const openTemplateModal = () => setShowTemplateModal(true);
+  const closeTemplateModal = () => setShowTemplateModal(false);
+  const selectTemplate = (id) => {
+    setTemplate(id);
+    setShowTemplateModal(false);
+  };
+
   return (
     <PageShell title="Nueva hoja de vida">
       <div className="flex flex-col gap-5">
@@ -80,16 +89,21 @@ export const NewCV = memo(function NewCV() {
 
         <section className="ink-card-flat p-5">
           <h2 className="hand-title mb-3 text-3xl">2 · Plantilla (define el look)</h2>
-          <div className="grid gap-2 md:grid-cols-3">
-            {TEMPLATES.map((t) => (
-              <button key={t.id} type="button" onClick={() => setTemplate(t.id)}
-                className={`rounded-xl border-[2.5px] p-4 text-left transition-all ${template === t.id ? 'border-ink bg-pgreen/30 shadow-[3px_3px_0_#1e1630]' : 'border-ink/25 bg-paper hover:border-ink'}`}>
-                <span className="material-symbols-outlined text-2xl" aria-hidden>{t.icon}</span>
-                <p className="hand-title text-2xl">{t.name.es}</p>
-                <p className="text-xs text-ink/65">{t.desc.es}</p>
-              </button>
-            ))}
-          </div>
+          <button type="button" onClick={openTemplateModal} className="btn-ink w-full bg-paper text-ink justify-start gap-3">
+            <span className="material-symbols-outlined text-2xl" aria-hidden>{templateById(template).icon}</span>
+            <div className="text-left">
+              <p className="hand-title text-2xl">{templateById(template).name.es}</p>
+              <p className="text-xs text-ink/65">{templateById(template).desc.es}</p>
+            </div>
+            <span className="material-symbols-outlined ml-auto" aria-hidden>expand_more</span>
+          </button>
+
+          <TemplateSelectorModal
+            isOpen={showTemplateModal}
+            onClose={() => setShowTemplateModal(false)}
+            onSelect={selectTemplate}
+            currentTemplate={template}
+          />
         </section>
 
         <section className="ink-card-flat p-5">
@@ -131,6 +145,8 @@ export const EditCV = memo(function EditCV({ id }) {
   const [saving, setSaving] = useState(false);
   const [meta, setMeta] = useState({ title: '', slug: '', visibility: 'public', template: 'hand-drawn' });
   const [savedAt, setSavedAt] = useState('');
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const openTemplateModal = () => setShowTemplateModal(true);
 
   useEffect(() => {
     getCv(id).then((c) => {
@@ -198,9 +214,21 @@ export const EditCV = memo(function EditCV({ id }) {
         </div>
         <label className="block">
           <span className="mb-1 block font-mono text-[11px] font-bold uppercase tracking-widest text-ink/60">Plantilla</span>
-          <select value={meta.template} onChange={(e) => setMeta({ ...meta, template: e.target.value })} className="w-full rounded-lg border-2 border-ink bg-paper px-3 py-2 focus:outline-none">
-            {TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name.es}</option>)}
-          </select>
+          <button type="button" onClick={openTemplateModal} className="btn-ink w-full bg-paper text-ink justify-start gap-3">
+            <span className="material-symbols-outlined text-2xl" aria-hidden>{templateById(meta.template).icon}</span>
+            <div className="text-left">
+              <p className="hand-title text-2xl">{templateById(meta.template).name.es}</p>
+              <p className="text-xs text-ink/65">{templateById(meta.template).desc.es}</p>
+            </div>
+            <span className="material-symbols-outlined ml-auto" aria-hidden>expand_more</span>
+          </button>
+
+          <TemplateSelectorModal
+            isOpen={showTemplateModal}
+            onClose={() => setShowTemplateModal(false)}
+            onSelect={(id) => setMeta({ ...meta, template: id })}
+            currentTemplate={meta.template}
+          />
         </label>
       </div>
       <CvForm profession={cv.profession} initialData={cv.data} onSave={onSave} saving={saving} />
