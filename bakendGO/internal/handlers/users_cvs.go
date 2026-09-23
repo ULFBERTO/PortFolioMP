@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"portfolio-backend/internal/auth"
@@ -301,6 +302,48 @@ func (h *Handler) UpdateCV(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 	writeJSON(w, http.StatusOK, cv)
+}
+
+// DuplicateCV copies a CV (owner or admin) with a unique "-copia" slug.
+// POST /api/cvs/:id/duplicate
+func (h *Handler) DuplicateCV(w http.ResponseWriter, r *http.Request, id string) {
+	uid, role, ok := h.currentUser(r)
+	if !ok {
+		writeJSON(w, http.StatusUnauthorized, map[string]interface{}{"error": "Se requiere sesión"})
+		return
+	}
+	src, err := h.db.GetCVByID(r.Context(), id)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, map[string]interface{}{"error": "CV no encontrado"})
+		return
+	}
+	if src.OwnerID != uid && role != models.RoleAdmin {
+		writeJSON(w, http.StatusForbidden, map[string]interface{}{"error": "Sin permiso"})
+		return
+	}
+	// Slug único derivado del original: slug-copia, slug-copia-2, ...
+	slug := src.Slug + "-copia"
+	for i := 2; ; i++ {
+		var count int
+		_ = h.db.SQL.QueryRowContext(r.Context(), `SELECT COUNT(*) FROM cvs WHERE lower(slug) = lower($1)`, slug).Scan(&count)
+		if count == 0 {
+			break
+		}
+		slug = src.Slug + "-copia-" + strconv.Itoa(i)
+	}
+	copy, err := h.db.CreateCV(r.Context(), src.OwnerID, &models.CreateCVRequest{
+		Slug:       slug,
+		Title:      src.Title + " (copia)",
+		Profession: src.Profession,
+		Template:   src.Template,
+		Visibility: models.VisibilityPrivate, // la copia nace privada por seguridad
+		Data:       src.Data,
+	})
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusCreated, copy)
 }
 
 // DeleteCV removes a CV (owner or admin).

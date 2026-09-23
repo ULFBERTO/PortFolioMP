@@ -150,6 +150,9 @@ export const EditCV = memo(function EditCV({ id }) {
         template: meta.template,
         data: nextData,
       });
+      // Invalidar la entrada vieja Y la nueva: si cambió el slug, la URL
+      // anterior no debe seguir sirviendo el dato viejo desde el caché.
+      invalidatePublicCv(cv?.slug);
       setCv(updated);
       setMeta({ title: updated.title, slug: updated.slug, visibility: updated.visibility, template: updated.template });
       invalidatePublicCv(updated.slug);
@@ -159,7 +162,7 @@ export const EditCV = memo(function EditCV({ id }) {
     } finally {
       setSaving(false);
     }
-  }, [id, meta]);
+  }, [id, meta, cv]);
 
   if (error && !cv) {
     return <PageShell title="Editar"><ErrorState title="No se pudo abrir" description={error} /></PageShell>;
@@ -232,7 +235,7 @@ export const PublicCV = memo(function PublicCV({ slug }) {
       </div>
     );
   }
-  return <CVView data={cv.data} template={cv.template} activeSection={activeSection} />;
+  return <CVView cv={cv} activeSection={activeSection} />;
 });
 
 /** Admin: usuarios + todos los CVs. */

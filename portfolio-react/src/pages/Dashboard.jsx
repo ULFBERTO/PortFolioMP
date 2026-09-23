@@ -1,7 +1,8 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 import { Link, useRouter } from '@/shared/router.jsx';
 import { useAuth } from '@/features/auth/AuthContext.jsx';
-import { deleteCv, invalidatePublicCv, listMyCvs } from '@/features/cvs/cvsApi.js';
+import { deleteCv, duplicateCv, invalidatePublicCv, listMyCvs } from '@/features/cvs/cvsApi.js';
+import { printAtsPdf } from '@/features/cvs/atsResume.js';
 import { professionById, templateById } from '@/features/cvs/catalog.js';
 import Reveal from '@/shared/motion/Reveal.jsx';
 
@@ -39,6 +40,22 @@ function Dashboard() {
     } finally {
       setDeleting('');
     }
+  };
+
+  const onDuplicate = async (cv) => {
+    setDeleting(cv.id);
+    try {
+      const copy = await duplicateCv(cv.id);
+      navigate(`/app/cv/${copy.id}`);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setDeleting('');
+    }
+  };
+
+  const onPdf = (cv) => {
+    printAtsPdf(cv, { siteUrl: window.location.origin });
   };
 
   const onLogout = async () => {
@@ -92,6 +109,12 @@ function Dashboard() {
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Link to={`/cv/${cv.slug}`} className="btn-ink bg-paper px-4 py-1.5 font-mono text-xs font-bold">Ver</Link>
                   <Link to={`/app/cv/${cv.id}`} className="btn-ink bg-ink px-4 py-1.5 font-mono text-xs font-bold text-paper">Editar</Link>
+                  <button type="button" disabled={deleting === cv.id} onClick={() => onDuplicate(cv)} className="btn-ink bg-paper px-4 py-1.5 font-mono text-xs font-bold disabled:opacity-50">
+                    Duplicar
+                  </button>
+                  <button type="button" onClick={() => onPdf(cv)} className="btn-ink bg-paper px-4 py-1.5 font-mono text-xs font-bold">
+                    PDF ATS
+                  </button>
                   <button type="button" disabled={deleting === cv.id} onClick={() => onDelete(cv)} className="btn-ink bg-paper px-4 py-1.5 font-mono text-xs font-bold text-blush disabled:opacity-50">
                     {deleting === cv.id ? '…' : 'Eliminar'}
                   </button>

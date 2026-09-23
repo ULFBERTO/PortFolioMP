@@ -145,6 +145,14 @@ func NewApp() (*App, error) {
 			}
 			return
 
+		case len(seg) == 3 && seg[0] == "cvs" && seg[2] == "duplicate":
+			if r.Method == http.MethodPost {
+				h.DuplicateCV(w, r, seg[1])
+			} else {
+				methodNotAllowed()
+			}
+			return
+
 		case len(seg) == 2 && seg[0] == "cvs":
 			id := seg[1]
 			switch r.Method {

@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import { schemaFor } from './schemas.js';
-import { blankExpFactory, blankProjFactory } from './catalog.js';
+import { blankEduFactory, blankExpFactory, blankProjFactory } from './catalog.js';
 
 /** Lee/escribe por path "a.b.c" sobre un clon. */
 function getPath(obj, path) {
@@ -64,6 +64,7 @@ const Field = memo(function Field({ field, form, set }) {
   if (field.kind === 'stats') return <StatsEditor value={value} set={set} />;
   if (field.kind === 'explist') return <ExpListEditor label={field.label} value={value ?? []} set={set} fieldKey={field.key} />;
   if (field.kind === 'projlist') return <ProjListEditor label={field.label} value={value ?? []} set={set} fieldKey={field.key} />;
+  if (field.kind === 'edulist') return <EduListEditor label={field.label} value={value ?? []} set={set} fieldKey={field.key} />;
   return <TextInput label={field.label} value={value ?? ''} onChange={(v) => set(field.key, v)} type={field.kind === 'email' ? 'email' : field.kind === 'url' ? 'url' : 'text'} textarea={field.textarea} />;
 });
 
@@ -177,6 +178,36 @@ function ExpListEditor({ label, value, set, fieldKey }) {
         ))}
       </div>
       <button type="button" onClick={add} className="btn-ink mt-3 bg-paper px-4 py-2 font-mono text-xs font-bold">+ Agregar experiencia</button>
+    </div>
+  );
+}
+
+function EduListEditor({ label, value, set, fieldKey }) {
+  const update = (i, path, v) => {
+    const next = structuredClone(value);
+    next[i][path] = v;
+    set(fieldKey, next);
+  };
+  const add = () => set(fieldKey, [...value, blankEduFactory()]);
+  const remove = (i) => set(fieldKey, value.filter((_, j) => j !== i));
+  return (
+    <div>
+      <span className="mb-2 block font-mono text-[11px] font-bold uppercase tracking-widest text-ink/60">{label} ({value.length})</span>
+      <div className="flex flex-col gap-3">
+        {value.map((edu, i) => (
+          <div key={edu.id ?? i} className="rounded-xl border-2 border-ink bg-paper p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="font-mono text-xs font-bold">#{i + 1} {edu.title}</span>
+              <button type="button" onClick={() => remove(i)} className="font-mono text-xs font-bold text-blush">eliminar</button>
+            </div>
+            <div className="grid gap-2">
+              <TextInput label="Título (ej: Diseño y Desarrollo de Software)" value={edu.title ?? ''} onChange={(v) => update(i, 'title', v)} />
+              <TextInput label="Detalle (ej: SENA – Nov 2019 – Nov 2020)" value={edu.details ?? ''} onChange={(v) => update(i, 'details', v)} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={add} className="btn-ink mt-3 bg-paper px-4 py-2 font-mono text-xs font-bold">+ Agregar estudio</button>
     </div>
   );
 }

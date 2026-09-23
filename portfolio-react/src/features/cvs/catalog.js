@@ -23,7 +23,7 @@ const L = (es, en) => ({ es, en });
 function baseData() {
   return {
     theme: { primary: '#2bee79', backgroundDark: '#102217', surfaceDark: '#162e21', backgroundLight: '#f6f8f7', surfaceLight: '#ffffff' },
-    profile: { name: '', shortName: '', initials: '', role: L('', ''), avatarUrl: '', email: '', github: '', linkedin: '', cvUrl: '' },
+    profile: { name: '', shortName: '', initials: '', role: L('', ''), avatarUrl: '', email: '', phone: '', location: '', github: '', linkedin: '', cvUrl: '' },
     hero: { greeting: L('', ''), description: L('', '') },
     stats: {
       yearsActive: { value: '', label: L('', ''), sublabel: L('', '') },
@@ -34,6 +34,8 @@ function baseData() {
     experience: [],
     technologies: [],
     projects: [],
+    education: [],
+    languages: L('', ''),
     contact: { title: L('', ''), description: L('', '') },
     sidebar: { availability: L('', ''), openToWork: L('', ''), downloadCV: L('', '') },
     footer: { builtWith: L('', '') },
@@ -69,5 +71,8 @@ export function blankDataFor(profession) {
   return d;
 }
 
+const blankEdu = () => ({ id: `edu-${Date.now()}`, title: '', details: '' });
+
 export const blankExpFactory = blankExp;
 export const blankProjFactory = blankProj;
+export const blankEduFactory = blankEdu;

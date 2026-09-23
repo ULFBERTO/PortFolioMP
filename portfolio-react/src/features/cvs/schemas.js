@@ -9,6 +9,8 @@ const profileFields = [
   { key: 'profile.shortName', kind: 'text', label: 'Nombre corto' },
   { key: 'profile.initials', kind: 'text', label: 'Iniciales' },
   { key: 'profile.email', kind: 'email', label: 'Email' },
+  { key: 'profile.phone', kind: 'text', label: 'Teléfono' },
+  { key: 'profile.location', kind: 'text', label: 'Ubicación' },
   { key: 'profile.role', kind: 'localized', label: 'Rol / título' },
   { key: 'profile.github', kind: 'url', label: 'GitHub URL' },
   { key: 'profile.linkedin', kind: 'url', label: 'LinkedIn URL' },
@@ -18,6 +20,11 @@ const profileFields = [
 const heroFields = [
   { key: 'hero.greeting', kind: 'localized', label: 'Saludo' },
   { key: 'hero.description', kind: 'localized', label: 'Descripción', textarea: true },
+];
+
+const eduLangFields = [
+  { key: 'education', kind: 'edulist', label: 'Estudios' },
+  { key: 'languages', kind: 'localized', label: 'Idiomas (ej: Español: Nativo | Inglés: B1)' },
 ];
 
 const contactFields = [
@@ -37,6 +44,7 @@ export const SCHEMAS = Object.freeze({
     { id: 'experience', title: 'Experiencia', fields: [{ key: 'experience', kind: 'explist', label: 'Empleos' }] },
     { id: 'tech', title: 'Stack', fields: [{ key: 'technologies', kind: 'chips', label: 'Tecnologías' }] },
     { id: 'projects', title: 'Proyectos', fields: [{ key: 'projects', kind: 'projlist', label: 'Proyectos' }] },
+    { id: 'education', title: 'Educación e idiomas', fields: eduLangFields },
     { id: 'contact', title: 'Contacto', fields: contactFields },
   ],
   designer: [
@@ -45,6 +53,7 @@ export const SCHEMAS = Object.freeze({
     { id: 'projects', title: 'Obras seleccionadas', fields: [{ key: 'projects', kind: 'projlist', label: 'Obras (usa Imagen del proyecto)' }] },
     { id: 'experience', title: 'Experiencia', fields: [{ key: 'experience', kind: 'explist', label: 'Empleos' }] },
     { id: 'tech', title: 'Herramientas', fields: [{ key: 'technologies', kind: 'chips', label: 'Herramientas' }] },
+    { id: 'education', title: 'Educación e idiomas', fields: eduLangFields },
     { id: 'contact', title: 'Contacto', fields: contactFields },
   ],
   general: [
@@ -52,6 +61,7 @@ export const SCHEMAS = Object.freeze({
     { id: 'hero', title: 'Resumen', fields: heroFields },
     { id: 'experience', title: 'Experiencia', fields: [{ key: 'experience', kind: 'explist', label: 'Empleos' }] },
     { id: 'tech', title: 'Habilidades', fields: [{ key: 'technologies', kind: 'chips', label: 'Habilidades' }] },
+    { id: 'education', title: 'Educación e idiomas', fields: eduLangFields },
     { id: 'contact', title: 'Contacto', fields: contactFields },
   ],
 });

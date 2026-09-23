@@ -1,8 +1,9 @@
 import { memo } from 'react';
 import { useLanguage } from '@/context/LanguageContext.jsx';
 import { NAVIGATION } from '@/config/app.js';
+import { printAtsPdf } from '@/features/cvs/atsResume.js';
 
-function Sidebar({ data, activeSection }) {
+function Sidebar({ data, activeSection, atsCv }) {
   const { lang, setLang, t } = useLanguage();
   const { profile, sidebar } = data;
 
@@ -62,6 +63,17 @@ function Sidebar({ data, activeSection }) {
           <span className="material-symbols-outlined text-[20px]">download</span>
           <span className="truncate">{sidebar.downloadCV[lang]}</span>
         </a>
+        {atsCv && (
+          <button
+            type="button"
+            onClick={() => printAtsPdf(atsCv, { lang, siteUrl: window.location.origin })}
+            className="btn-ink flex h-12 w-full items-center justify-center gap-2 bg-paper px-4 text-sm font-bold text-ink"
+            title="Descarga la hoja ATS en PDF (diálogo de impresión)"
+          >
+            <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+            <span className="truncate">PDF ATS</span>
+          </button>
+        )}
       </div>
     </aside>
   );

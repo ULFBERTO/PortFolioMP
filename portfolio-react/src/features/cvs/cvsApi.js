@@ -17,6 +17,7 @@ export const getCv = (id) => httpGet(`/cvs/${id}`);
 export const createCv = (payload) => httpPost('/cvs', payload);
 export const updateCv = (id, payload) => httpPut(`/cvs/${id}`, payload);
 export const deleteCv = (id) => httpDelete(`/cvs/${id}`);
+export const duplicateCv = (id) => httpPost(`/cvs/${id}/duplicate`, {});
 
 export async function getPublicCv(slug) {
   const hit = publicCache.get(slug.toLowerCase());
