@@ -170,6 +170,75 @@ html[data-motion="full"] .stamp {
   opacity: 0;
 }
 
+/* ===== Plantillas de CV: remapeo por variables (CVView pone .cv-tpl + vars) =====
+   .cv-tpl .<util> (0,2,0) gana a la utility Tailwind (0,1,0). Para hand-drawn
+   las vars son idénticas a los defaults → sin cambios visibles. */
+.cv-tpl .bg-paper { background-color: var(--tpl-paper); }
+.cv-tpl .bg-paperdeep { background-color: color-mix(in srgb, var(--tpl-paper) 85%, var(--tpl-ink)); }
+.cv-tpl .bg-paper\/70 { background-color: color-mix(in srgb, var(--tpl-paper) 70%, transparent); }
+.cv-tpl .text-ink { color: var(--tpl-ink); }
+.cv-tpl .text-ink\/40 { color: color-mix(in srgb, var(--tpl-ink) 40%, transparent); }
+.cv-tpl .text-ink\/50 { color: color-mix(in srgb, var(--tpl-ink) 50%, transparent); }
+.cv-tpl .text-ink\/60 { color: color-mix(in srgb, var(--tpl-ink) 60%, transparent); }
+.cv-tpl .text-ink\/65 { color: color-mix(in srgb, var(--tpl-ink) 65%, transparent); }
+.cv-tpl .text-ink\/70 { color: color-mix(in srgb, var(--tpl-ink) 70%, transparent); }
+.cv-tpl .text-ink\/75 { color: color-mix(in srgb, var(--tpl-ink) 75%, transparent); }
+.cv-tpl .text-ink\/80 { color: color-mix(in srgb, var(--tpl-ink) 80%, transparent); }
+.cv-tpl .border-ink { border-color: var(--tpl-ink); }
+.cv-tpl .border-ink\/25 { border-color: color-mix(in srgb, var(--tpl-ink) 25%, transparent); }
+.cv-tpl .border-ink\/30 { border-color: color-mix(in srgb, var(--tpl-ink) 30%, transparent); }
+.cv-tpl .border-ink\/40 { border-color: color-mix(in srgb, var(--tpl-ink) 40%, transparent); }
+.cv-tpl .bg-ink { background-color: var(--tpl-ink); }
+.cv-tpl .bg-ink\/5 { background-color: color-mix(in srgb, var(--tpl-ink) 5%, transparent); }
+.cv-tpl .bg-ink\/10 { background-color: color-mix(in srgb, var(--tpl-ink) 10%, transparent); }
+.cv-tpl .text-paper { color: var(--tpl-paper); }
+.cv-tpl .bg-primary { background-color: var(--tpl-primary); }
+.cv-tpl .text-primary { color: var(--tpl-primary); }
+.cv-tpl .border-primary { border-color: var(--tpl-primary); }
+.cv-tpl .bg-pgreen { background-color: var(--tpl-primary); }
+.cv-tpl .text-pgreen { color: var(--tpl-primary); }
+.cv-tpl .border-pgreen { border-color: var(--tpl-primary); }
+.cv-tpl .bg-pgreen\/30 { background-color: color-mix(in srgb, var(--tpl-primary) 30%, transparent); }
+.cv-tpl .bg-pgreen\/40 { background-color: color-mix(in srgb, var(--tpl-primary) 40%, transparent); }
+.cv-tpl .text-blush { color: var(--tpl-accent); }
+.cv-tpl .border-blush { border-color: var(--tpl-accent); }
+.cv-tpl .bg-blush\/10 { background-color: color-mix(in srgb, var(--tpl-accent) 10%, transparent); }
+.cv-tpl .bg-blush\/15 { background-color: color-mix(in srgb, var(--tpl-accent) 15%, transparent); }
+.cv-tpl .decoration-pgreen { text-decoration-color: var(--tpl-primary); }
+.cv-tpl .ink-card, .cv-tpl .ink-card-flat, .cv-tpl .sticky {
+  background-color: var(--tpl-card);
+  border-color: var(--tpl-ink);
+  box-shadow: 4px 5px 0 color-mix(in srgb, var(--tpl-ink) 85%, transparent);
+}
+.cv-tpl .sticky { transform: none; }
+.cv-tpl .btn-ink { border-color: var(--tpl-ink); box-shadow: 3px 3px 0 var(--tpl-ink); }
+.cv-tpl .btn-ink:hover { box-shadow: 4px 5px 0 var(--tpl-ink); }
+.cv-tpl .btn-ink:active { box-shadow: 1px 1px 0 var(--tpl-ink); }
+.cv-tpl .tape::before, .cv-tpl .tape::after {
+  background: color-mix(in srgb, var(--tpl-paper) 72%, var(--tpl-ink));
+  border-color: color-mix(in srgb, var(--tpl-ink) 25%, transparent);
+}
+/* Tipografías por familia */
+.cv-tpl[data-template="academic"] .hand-title { font-family: Georgia, "Times New Roman", serif; }
+.cv-tpl[data-template="typewriter"] .hand-title,
+.cv-tpl[data-template="terminal"] .hand-title { font-family: ui-monospace, Menlo, Consolas, monospace; }
+/* Firmas: glow neón, grid blueprint, scanlines terminal, degradado cálido */
+.cv-tpl[data-template="dark-mode"] .btn-ink,
+.cv-tpl[data-template="dracula"] .btn-ink,
+.cv-tpl[data-template="retro"] .btn-ink,
+.cv-tpl[data-template="terminal"] .btn-ink {
+  box-shadow: 3px 3px 0 var(--tpl-ink), 0 0 22px color-mix(in srgb, var(--tpl-primary) 55%, transparent);
+}
+.cv-tpl[data-template="blueprint"] { background-image: radial-gradient(color-mix(in srgb, var(--tpl-primary) 16%, transparent) 1px, transparent 1px); background-size: 22px 22px; }
+.cv-tpl[data-template="terminal"]::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 40;
+  background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,.28) 2px 4px);
+}
+.cv-tpl[data-template="retro"] #dashboard,
+.cv-tpl[data-template="sunset"] #dashboard {
+  background: linear-gradient(135deg, var(--tpl-card), color-mix(in srgb, var(--tpl-primary) 22%, var(--tpl-card)));
+}
+
 /* ===== Plantillas de CV (data-template en CVView) ===== */
 /* executive: sobrio, sin canvas, tarjetas planas */
 [data-template="executive"] canvas { display: none; }

@@ -7,6 +7,7 @@ import Reveal from '@/shared/motion/Reveal.jsx';
 import Marquee from '@/shared/motion/Marquee.jsx';
 import { SectionFallback, LazySection } from '@/shared/components/ui/index.js';
 import { ErrorBoundary } from '@/shared/components/feedback/ErrorBoundary.jsx';
+import { isLightPaper, templateById } from '@/features/cvs/catalog.js';
 
 const ExperienceSection = lazy(() => import('@/components/ExperienceSection.jsx'));
 const HexProjects = lazy(() => import('@/components/HexProjects.jsx'));
@@ -23,10 +24,27 @@ const DoodleDivider = lazy(() => import('@/shared/components/canvas/DoodleDivide
 function CVView({ cv, data, template = 'hand-drawn', activeSection }) {
   const resolved = cv?.data ?? data;
   const tpl = cv?.template ?? template;
-  const rich = tpl === 'hand-drawn';
+  const theme = templateById(tpl).theme || {};
+  // Canvas de fondo solo si la plantilla lo pide Y el papel es claro
+  // (el motor dibuja papel claro fijo; en papel oscuro se oculta).
+  const rich = theme.canvas === true && isLightPaper(theme.paper);
+  const style = {
+    backgroundColor: theme.paper,
+    color: theme.ink,
+    '--tpl-paper': theme.paper,
+    '--tpl-ink': theme.ink,
+    '--tpl-primary': theme.primary,
+    '--tpl-accent': theme.accent,
+    '--tpl-card': theme.card || theme.paper,
+    ...(theme.font === 'monospace'
+      ? { fontFamily: 'ui-monospace,Menlo,Consolas,monospace' }
+      : theme.serif
+        ? { fontFamily: 'Georgia,"Times New Roman",serif' }
+        : null),
+  };
 
   return (
-    <div data-template={tpl} className="flex h-screen overflow-hidden bg-paper text-ink">
+    <div data-template={tpl} style={style} className="cv-tpl flex h-screen overflow-hidden bg-paper text-ink">
       <Sidebar data={resolved} activeSection={activeSection} atsCv={cv} />
       <main className="relative h-full flex-1 overflow-y-auto">
         <MobileHeader data={resolved} activeSection={activeSection} />

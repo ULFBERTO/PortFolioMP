@@ -11,7 +11,7 @@ export const PROFESSIONS = Object.freeze([
 
 export const TEMPLATES = Object.freeze([
   // Fila 1: Estilos clásicos
-  { id: 'hand-drawn', icon: 'draw', name: { es: 'Hecho a mano', en: 'Hand-drawn' }, desc: { es: 'Papel, tinta y canvas procedurales (look original).', en: 'Paper, ink and procedural canvases (original look).' }, theme: { primary: '#2bee79', paper: '#f3e6cf', ink: '#1e1630', accent: '#c8473f', canvas: true, cardStyle: 'ink', sidebar: 'left' } },
+  { id: 'hand-drawn', icon: 'draw', name: { es: 'Hecho a mano', en: 'Hand-drawn' }, desc: { es: 'Papel, tinta y canvas procedurales (look original).', en: 'Paper, ink and procedural canvases (original look).' }, theme: { primary: '#2bee79', paper: '#f3e6cf', ink: '#1e1630', accent: '#c8473f', card: '#fffdf7', canvas: true, cardStyle: 'ink', sidebar: 'left' } },
   { id: 'executive', icon: 'business_center', name: { es: 'Ejecutivo', en: 'Executive' }, desc: { es: 'Sobrio, tarjetas planas, sin canvas.', en: 'Sober, flat cards, no canvas.' }, theme: { primary: '#1e3a5f', paper: '#f8f9fa', ink: '#1a1a2e', accent: '#2e86c1', canvas: false, cardStyle: 'flat', sidebar: 'left' } },
   { id: 'minimal', icon: 'density_large', name: { es: 'Minimalista', en: 'Minimal' }, desc: { es: 'Texto al centro, cero adornos.', en: 'Centered text, zero ornaments.' }, theme: { primary: '#333333', paper: '#ffffff', ink: '#1a1a1a', accent: '#666666', canvas: false, cardStyle: 'minimal', sidebar: 'center' } },
   { id: 'typewriter', icon: 'font_download', name: { es: 'Máquina de escribir', en: 'Typewriter' }, desc: { es: 'Estética mecanografiada, monoespaciado.', en: 'Typewriter aesthetic, monospaced.' }, theme: { primary: '#2d2d2d', paper: '#f5f0e1', ink: '#1a1a1a', accent: '#8b4513', canvas: false, cardStyle: 'typewriter', sidebar: 'left', font: 'monospace' } },
@@ -40,6 +40,15 @@ export const TEMPLATES = Object.freeze([
 
 export const professionById = (id) => PROFESSIONS.find((p) => p.id === id) ?? PROFESSIONS[0];
 export const templateById = (id) => TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0];
+
+/** Luminancia 0..1 de un hex; el canvas del motor dibuja papel claro fijo. */
+export function isLightPaper(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+  if (!m) return true;
+  const n = parseInt(m[1], 16);
+  const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return lum > 0.55;
+}
 
 const L = (es, en) => ({ es, en });
 
